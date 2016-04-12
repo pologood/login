@@ -130,6 +130,11 @@
       <artifactId>mybatis-spring</artifactId>
       <version>1.2.2</version>
     </dependency>
+    <dependency>
+      <groupId>org.patchca</groupId>
+      <artifactId>patchca</artifactId>
+      <version>0.6.0</version>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -176,26 +181,6 @@
       </resource>
     </resources>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.5.2</version>
-        <executions>
-          <execution>
-            <phase>initialize</phase>
-            <goals>
-              <goal>install-file</goal>
-            </goals>
-            <configuration>
-              <groupId>org.patchca</groupId>
-              <artifactId>patchca</artifactId>
-              <version>0.6.0</version>
-              <packaging>jar</packaging>
-              <file>${basedir}/lib/patchca-0.6.0.jar</file>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

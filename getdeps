@@ -1,3 +1,17 @@
 #!/bin/bash
 
-curl http://github.sogou-op.org/qiyun/extlib/raw/master/patchca-0.6.0.jar -o lib/patchca-0.6.0.jar
+test -d lib || mkdir lib
+test -f deps.txt || exit
+
+for line in `cat deps.txt`; do
+  regex="([^-]+)-(.+)\.jar"
+  if [[ $line =~ $regex ]]; then
+    revPkg=$(echo "${BASH_REMATCH[1]}" | rev)
+    artifactId=$(echo $revPkg | cut -d'.' -f 1 | rev)
+    groupId=$(echo $revPkg | cut -d'.' -f 2- | rev)
+    version="${BASH_REMATCH[2]}"
+
+    echo curl http://github.sogou-op.org/qiyun/extlib/raw/master/$line -o lib/$line | bash -x
+    echo mvn install:install-file -Dfile=./lib/$line -DgroupId=$groupId -DartifactId=$artifactId -Dversion=$version -Dpackaging=jar | bash -x
+  fi
+done

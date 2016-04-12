@@ -6,6 +6,7 @@ import org.jsondoc.core.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
+import org.patchca.service.ConfigurableCaptchaService;
 import ms.login.model.*;
 import ms.login.manager.*;
 
@@ -18,6 +19,8 @@ import ms.login.manager.*;
 public class LoginController {
   @Autowired LoginManager loginManager;
 
+  private static ConfigurableCaptchaService captchaService = new ConfigurableCaptchaService();
+  
   static Pattern idCodePattern = Pattern.compile("^[a-zA-Z0-9]{32}$");
 
   @ApiMethod(description = "get identifying code, id OR account required")
