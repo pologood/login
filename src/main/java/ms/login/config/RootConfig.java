@@ -5,7 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.web.authentication.RememberMeServices;
 import redis.clients.jedis.JedisPool;
+import commons.saas.*;
+import commons.spring.*;
 
 @Configuration
 @ComponentScan({ProjectInfo.PKG_PREFIX + ".api", ProjectInfo.PKG_PREFIX + ".manager"})
@@ -18,5 +21,27 @@ public class RootConfig {
     return new JedisPool(
       env.getRequiredProperty("redis.url"),
       env.getRequiredProperty("redis.port", Integer.class));
+  }
+
+  @Bean
+  public PatchcaService patchcaService() {
+    return new PatchcaService(jedisPool());
+  }
+
+  @Bean
+  public SmsService smsService() {
+    return new QCloudSmsService(
+      env.getRequiredProperty("sms.appid"),
+      env.getRequiredProperty("sms.appkey"),
+      jedisPool()
+      );
+  }
+
+  @Bean
+  public RememberMeServices rememberMeServices() {
+    return new RedisRememberMeService(
+      jedisPool(),
+      env.getRequiredProperty("web.host"),
+      86400 * 7);
   }
 }

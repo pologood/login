@@ -1,12 +1,13 @@
 package ms.login.api;
 
+import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+import javax.servlet.http.*;
 import org.jsondoc.core.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
-import org.patchca.service.ConfigurableCaptchaService;
 import ms.login.model.*;
 import ms.login.manager.*;
 
@@ -19,32 +20,42 @@ import ms.login.manager.*;
 public class LoginController {
   @Autowired LoginManager loginManager;
 
-  private static ConfigurableCaptchaService captchaService = new ConfigurableCaptchaService();
-  
   static Pattern idCodePattern = Pattern.compile("^[a-zA-Z0-9]{32}$");
 
   @ApiMethod(description = "get identifying code, id OR account required")
   @RequestMapping(value = "/idcode", method = RequestMethod.GET)
-  public ApiResult getIdentifyingCode(
+  public ResponseEntity<Void> getIdentifyingCode(HttpServletResponse response,
     @ApiQueryParam(name = "id", description = "random alnum", format = "[a-zA-Z0-9]{32}")
     @RequestParam(required = false) Optional<String> id,
     @ApiQueryParam(name = "account", description = "phone OR email")
-    @RequestParam(required = false) Optional<String> account) {
+    @RequestParam(required = false) Optional<String> account) throws IOException {
+
+    OutputStream os = response.getOutputStream();
+
+    byte[] img;
     if (account.isPresent()) {
-      return loginManager.getIdentifyingCode(account.get());
+      img = loginManager.getIdentifyingCode(account.get());
     } else if (id.isPresent()) {
       if (idCodePattern.matcher(id.get()).find()) {
-        return loginManager.getIdentifyingCode(id.get());
+        img = loginManager.getIdentifyingCode(id.get());
       } else {
-        return ApiResult.badRequest("id format error");
+        os.write("id format error".getBytes());
+        return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
       }
     } else {
-      return ApiResult.badRequest("id or account is required");
+      os.write("id or account is required".getBytes());
+      return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
     }
+
+    // HttpHeaders not work, have not figure out
+    response.setContentType("image/png");
+    response.setHeader("cache", "no-cache");
+    os.write(img);
+    return new ResponseEntity<Void>(HttpStatus.OK);
   }
 
   @ApiMethod(description = "get register code")
-  @RequestMapping(value = "regcode", method = RequestMethod.GET)
+  @RequestMapping(value = "/regcode", method = RequestMethod.GET)
   public ApiResult getRegisterCode(
     @ApiQueryParam(name = "account", description = "phone or email")
     @RequestParam String account) {
@@ -82,14 +93,6 @@ public class LoginController {
     @RequestParam(required = false) Optional<String> idcode) {
     return loginManager.login(account, password, idcode);
   }
-
-  /*
-    if (account.indexOf('@') != -1) {
-      return loginManager.loginByEmail(email.get(), password);
-    } else {
-      return loginManager.loginByPhone(phone.get(), password);
-    }
-    }*/
 
   @ApiMethod(description = "logout")
   @RequestMapping(value = "/logout/{id}", method = RequestMethod.GET)
