@@ -1,9 +1,10 @@
 package ms.login.entity;
 
-import org.hibernate.validator.constraints.NotBlank;
 import org.jsondoc.core.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @ApiObject(name = "Account", description = "Account info")
+@JsonIgnoreProperties("password")
 public class Account {
   public static enum Status {
     OK(1);
@@ -32,7 +33,9 @@ public class Account {
   
   @ApiObjectField(description = "status")
   Status status;
-  
+
+  @ApiObjectField(description = "perm")
+  int perm = Integer.MIN_VALUE;
 
   public void setId(long id) {
     this.id = id;
@@ -81,5 +84,16 @@ public class Account {
   }
   public Status getStatus() {
     return this.status;
+  }
+
+  public void setPerm(int perm) {
+    this.perm = perm;
+  }
+  public int getPerm() {
+    return this.perm;
+  }
+
+  public static boolean permGt(int a, int b) {
+    return (b / 100 * 100 - a / 100 * 100 >= 100);
   }
 }

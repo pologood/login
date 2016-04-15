@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ServletRequestBindingException.class)
   @ResponseBody
   public ApiResult servletRequestBindingException(Exception e) {
-    return new ApiResult(Errno.BAD_REQUEST, Throwables.getStackTraceAsString(e));
+    return new ApiResult(Errno.BAD_REQUEST, e.toString());
   }
   
   @ExceptionHandler(Errno.BadRequestException.class)

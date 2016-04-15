@@ -11,6 +11,12 @@ public class Errno {
   public static final int NOT_IMPLEMENT       = 501;
   public static final int SERVICE_UNAVAILABLE = 503;
 
+  public static final int IDENTIFY_CODE_ERROR = 1000;
+  public static final int IDENTIFY_CODE_REQUIRED = 1001;
+  public static final int USER_EXISTS         = 1100;
+  public static final int USER_NOT_FOUND      = 1101;
+  public static final int USER_PASSWORD_ERROR = 1102;
+
   public static String getMessage(int code) {
     switch (code) {
     case OK: return "OK";

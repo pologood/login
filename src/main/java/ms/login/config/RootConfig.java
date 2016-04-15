@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.web.authentication.RememberMeServices;
 import redis.clients.jedis.JedisPool;
 import commons.saas.*;
 import commons.spring.*;
@@ -38,7 +37,7 @@ public class RootConfig {
   }
 
   @Bean
-  public RememberMeServices rememberMeServices() {
+  public RedisRememberMeService rememberMeServices() {
     return new RedisRememberMeService(
       jedisPool(),
       env.getRequiredProperty("web.host"),

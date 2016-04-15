@@ -9,8 +9,15 @@ import ms.login.entity.Account;
 public interface AccountMapper {
   class Sql {
     final static String TABLE = "account";
+
+    final static String SELECT_BY_ID = "SELECT * FROM " + TABLE + " WHERE id = #{id}";
     final static String SELECT_BY_PHONE = "SELECT * FROM " + TABLE + " WHERE phone = #{phone}";
     final static String SELECT_BY_EMAIL = "SELECT * FROM " + TABLE + " WHERE email = #{email}";
+
+    final static String UPDATE_PASSWORD_BY_ID =
+      "UPDATE " + TABLE + " SET password = #{password} WHERE id = #{id}";
+    final static String UPDATE_PASSWORD_BY_PHONE =
+      "UPDATE " + TABLE + " SET password = #{password} WHERE phone = #{phone}";
 
     public static String insert(Account account) {
       SQL sql = new SQL().INSERT_INTO(TABLE);
@@ -21,6 +28,7 @@ public interface AccountMapper {
         sql.VALUES("email", "#{email}");
       }
       sql.VALUES("password", "#{password}");
+      sql.VALUES("perm", "#{perm}");
       return sql.toString();
     }
 
@@ -35,9 +43,15 @@ public interface AccountMapper {
       if (account.getStatus() != null) {
         sql.SET("status = #{status}");
       }
+      if (account.getPerm() != Integer.MIN_VALUE) {
+        sql.SET("perm = #{perm}");
+      }
       return sql.WHERE("id = #{id}").toString();        
     }
   }
+
+  @Select(Sql.SELECT_BY_ID)
+  Account find(long id);
 
   @Select(Sql.SELECT_BY_PHONE)
   Account findByPhone(String phone);
@@ -50,5 +64,11 @@ public interface AccountMapper {
   int add(Account account);
 
   @UpdateProvider(type = Sql.class, method = "update")
-  int update(Account employee);
+  int update(Account account);
+
+  @Update(Sql.UPDATE_PASSWORD_BY_ID)
+  int updatePasswordById(@Param("id") long id, @Param("password") String password);
+
+  @Update(Sql.UPDATE_PASSWORD_BY_PHONE)
+  int updatePasswordByPhone(@Param("phone") String phone, @Param("password") String password);
 }

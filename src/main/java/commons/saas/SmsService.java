@@ -33,8 +33,10 @@ public abstract class SmsService {
 
   public String get(String phone) {
     String code;
+    String key = CODE_PREFIX + phone;
     try (Jedis c = jedisPool.getResource()) {
-      code = c.get(CODE_PREFIX + phone);
+      code = c.get(key);
+      c.del(key);         // sms code is one-off
     }
     return code;
   }

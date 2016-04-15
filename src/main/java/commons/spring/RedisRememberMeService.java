@@ -77,18 +77,24 @@ public class RedisRememberMeService implements RememberMeServices {
     return token;    
   }
 
-  public void logout(HttpServletResponse response) {
-    Cookie uid = new Cookie("uid", null);
-    uid.setMaxAge(0);
-    uid.setPath("/");
-    uid.setDomain(domain);
-    response.addCookie(uid);
+  public void logout(long uid, HttpServletResponse response) {
+    try (Jedis c = jedisPool.getResource()) {
+      c.del(KEY_PREFIX + String.valueOf(uid));
+    }
+    
+    if (response != null) {
+      Cookie uidCookie = new Cookie("uid", null);
+      uidCookie.setMaxAge(0);
+      uidCookie.setPath("/");
+      uidCookie.setDomain(domain);
+      response.addCookie(uidCookie);
 
-    Cookie token = new Cookie("token", null);
-    token.setMaxAge(0);
-    token.setPath("/");
-    token.setDomain(domain);
-    response.addCookie(token);    
+      Cookie token = new Cookie("token", null);
+      token.setMaxAge(0);
+      token.setPath("/");
+      token.setDomain(domain);
+      response.addCookie(token);
+    }
   }
 
   public boolean updatePerm(long uid, int perm) {
@@ -109,7 +115,7 @@ public class RedisRememberMeService implements RememberMeServices {
 
   private User checkToken(String token) {
     if (token == null) return null;
-
+    
     String parts[] = token.split(":", 2);
     if (parts.length != 2) return null;
 
@@ -142,15 +148,20 @@ public class RedisRememberMeService implements RememberMeServices {
 
   @Override
   public Authentication autoLogin(HttpServletRequest request, HttpServletResponse response) {
-    Cookie[] cookies = request.getCookies();
-    if (cookies == null) return null;
-
     String token = null;
-    for (Cookie cookie : cookies) {
-      if (cookie.getName().equals("token")) {
-        token = cookie.getValue();
-        break;
+    
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if (cookie.getName().equals("token")) {
+          token = cookie.getValue();
+          break;
+        }
       }
+    }
+
+    if (token == null) {
+      token = request.getHeader("authorization");
     }
 
     User user = checkToken(token);
