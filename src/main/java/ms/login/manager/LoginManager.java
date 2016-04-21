@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.http.*;
 import commons.utils.*;
 import commons.saas.*;
-import commons.spring.*;
+import commons.spring.RedisRememberMeService;
+import static commons.spring.RedisRememberMeService.User;
 import ms.login.model.*;
 import ms.login.entity.*;
 import ms.login.mapper.*;
@@ -23,7 +24,7 @@ public class LoginManager {
   @Autowired JedisPool      jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
 
-  private final static String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
+  private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
 
   private boolean isEmail(String account) {
     return account.indexOf('@') != -1;
@@ -133,35 +134,24 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
-  public ApiResult resetPassword(long uid, String password, String oldPassword,
+  public ApiResult resetPassword(User user, String password, String oldPassword,
                                  HttpServletResponse response) {
-    Account account = accountMapper.find(uid);
+    Account account = accountMapper.find(user.getUid());
     if (account == null) return ApiResult.internalError("uid not found");
 
     if (checkPassword(password, account.getPassword())) {
-      accountMapper.updatePasswordById(uid, encodePassword(password));
-      String token = rememberMeService.login(
-        response, new RedisRememberMeService.User(uid, account.getPerm()));
+      accountMapper.updatePasswordById(user.getUid(), encodePassword(password));
+      String token = rememberMeService.login(response, user);
       return new ApiResult<String>(token);
     } else {
       return new ApiResult(Errno.USER_PASSWORD_ERROR);
     }
   }
 
-  public ApiResult updateAccount(RedisRememberMeService.User user, Account account) {
-    if (account.getId() == user.getUid()) {
-      account.setStatus(null);
-      account.setPerm(Integer.MIN_VALUE);
-      accountMapper.update(account);
-    } else {
-      Account otherAccount = accountMapper.find(account.getId());
-      if (otherAccount == null) return ApiResult.notFound();
-      if (Account.permGt(user.getPerm(), otherAccount.getPerm())) {
-        accountMapper.update(account);
-      } else {
-        return ApiResult.forbidden();
-      }
-    }
+  public ApiResult updateAccount(Account account) {
+    account.setStatus(null);
+    account.setPerm(Long.MAX_VALUE);
+    accountMapper.update(account);
     return ApiResult.ok();
   }
 
@@ -170,9 +160,13 @@ public class LoginManager {
     if (accountName.isPresent()) {
       account = isEmail(accountName.get()) ? accountMapper.findByEmail(accountName.get()) :
         accountMapper.findByPhone(accountName.get());
-      if (account != null && account.getId() != user.getUid() &&
-          Account.permGt(account.getPerm(), user.getPerm())) {
-        return ApiResult.forbidden();
+      if (account != null) {
+        if (account.getId() == user.getUid() || 
+            (account.getIncId() == user.getIncId() && account.getPerm() == user.getPerm())) {
+          // permission allow
+        } else {
+          account = null;
+        }
       }
     } else {
       account = accountMapper.find(user.getUid());      
@@ -199,8 +193,13 @@ public class LoginManager {
       return new ApiResult(account == null ? Errno.USER_NOT_FOUND : Errno.USER_PASSWORD_ERROR);
     }
 
+    List<Long> permIds = null;
+    if (account.getPerm() == Account.PERM_EXIST) {
+//      permIds = permissionMapper.get(account.getId());
+    }
+
     String token = rememberMeService.login(
-      response, new RedisRememberMeService.User(account.getId(), account.getPerm()));
+      response, new User(account.getId(), account.getIncId(), permIds));
     
     return new ApiResult<String>(token);
   }

@@ -6,6 +6,17 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @ApiObject(name = "Account", description = "Account info")
 @JsonIgnoreProperties("password")
 public class Account {
+  public static final long PLAT_BOSS  = 0;
+  public static final long PLAT_ADMIN = 10;
+  public static final long BOSS       = 100;
+  public static final long PERM_EXIST = 9_999;
+  
+  public static final long SYS_PERM_MIN   = 10_000;
+  public static final long SYS_PERM_MAX   = 99_999;
+  public static final long PERM_GROUP_MIN = 1_000_000;
+  public static final long PERM_GROUP_MAX = 9_999_999;
+  public static final long INC_PERM_MIN   = 10_000_000;
+  
   public static enum Status {
     OK(1);
     private int value;
@@ -34,8 +45,11 @@ public class Account {
   @ApiObjectField(description = "status")
   Status status;
 
+  @ApiObjectField(description = "corporation id")
+  int incId = Integer.MIN_VALUE;
+
   @ApiObjectField(description = "perm")
-  int perm = Integer.MIN_VALUE;
+  long perm = Long.MAX_VALUE;
 
   public void setId(long id) {
     this.id = id;
@@ -86,14 +100,24 @@ public class Account {
     return this.status;
   }
 
-  public void setPerm(int perm) {
+  public void setIncId(int incId) {
+    this.incId = incId;
+  }
+  public int getIncId() {
+    return this.incId;
+  }
+
+  public void setPerm(long perm) {
     this.perm = perm;
   }
-  public int getPerm() {
+  public long getPerm() {
     return this.perm;
   }
 
-  public static boolean permGt(int a, int b) {
-    return (b / 100 * 100 - a / 100 * 100 >= 100);
+  public static boolean permGt(long a, long b) {
+    return a < b;
   }
+  public static boolean permGe(long a, long b) {
+    return a <= b;
+  }  
 }

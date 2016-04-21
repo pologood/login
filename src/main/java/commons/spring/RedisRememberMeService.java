@@ -16,31 +16,48 @@ import commons.utils.StringHelper;
 
 public class RedisRememberMeService implements RememberMeServices {
   public static class User {
-    private long uid;
-    private int  perm;
+    private Optional<Long>   uid;
+    private Optional<String> openId;
+    private int              incId; 
+    private List<Long>       permIds;
 
     public User(long uid) {
-      this(uid, Integer.MIN_VALUE);
+      this(uid, Integer.MIN_VALUE, null);
     }
 
-    public User(long uid, int perm) {
-      this.uid  = uid;
-      this.perm = perm;
+    public User(long uid, int incId, List<Long> permIds) {
+      this.uid     = Optional.of(uid);
+      this.incId   = incId;
+      this.permIds = permIds;
     }
 
     public long getUid() {
-      return this.uid;
+      return uid.get();
     }
 
-    public int getPerm() {
-      return this.perm;
-    }    
+    public String getId() {
+      return uid.isPresent() ? String.valueOf(uid.get()) : openId.get();
+    }
+
+    public int getIncId() {
+      return this.incId;
+    }
+
+    public long getPerm() {
+      if (permIds == null) return Long.MAX_VALUE;
+      else return permIds.get(0);
+    }
+
+    public List<Long> getPerms() {
+      return permIds;
+    }
   }
   
   private JedisPool jedisPool;
   private String    domain;
   private int       maxAge;
-  private String    KEY_PREFIX = "RedisRMS_";
+  private static final String KEY_PREFIX   = "RedisRMS_";
+  private static final int    PARTS_NUMBER = 5;
 
   public RedisRememberMeService(JedisPool jedisPool, String domain, int maxAge) {
     this.jedisPool = jedisPool;
@@ -48,30 +65,65 @@ public class RedisRememberMeService implements RememberMeServices {
     this.maxAge = maxAge;
   }
 
+  private String permsToString(List<Long> perms) {
+    if (perms == null) return "";
+
+    int i = 0;
+    StringBuilder builder = new StringBuilder();
+    for (Long perm : perms) {
+      if (i != 0) builder.append(",");
+      builder.append(String.valueOf(perm));
+      i++;
+    }
+    return builder.toString();
+  }
+
+  private List<Long> stringToPerms(String perms) {
+    if (perms.isEmpty()) return null;
+    
+    List<Long> permIds = new ArrayList<>();
+    for (String part : perms.split(",")) {
+      permIds.add(Long.valueOf(part));
+    }
+    return permIds;      
+  }
+
+  private String currentTime() {
+    return Long.toString(System.currentTimeMillis()/1000);
+  }
+
+  private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
+    Cookie cookie = new Cookie(key, value);
+    cookie.setPath("/");
+    cookie.setDomain(domain);
+    cookie.setMaxAge(maxAge);
+    if (httpOnly) cookie.setHttpOnly(true);
+    return cookie;
+  }    
+
+  private String cacheKey(long uid) {
+    return KEY_PREFIX + String.valueOf(uid);
+  }
+
+  private String cacheKey(String uid) {
+    return KEY_PREFIX + uid;
+  }
+  
   public String login(HttpServletResponse response, User user) {
     String uid  = String.valueOf(user.getUid());
-    String perm = user.getPerm() >= 0 ? String.valueOf(user.getPerm()) : "";
+    String incId = user.getIncId() == Integer.MIN_VALUE ? "" : String.valueOf(user.getIncId());
+    String perms = permsToString(user.getPerms());
 
     String token = String.join(":", uid, StringHelper.random(32));
 
     try (Jedis c = jedisPool.getResource()) {
-      c.setex(KEY_PREFIX + uid, maxAge,
-              String.join(":", token, perm, Long.toString(System.currentTimeMillis()/1000)));
+      c.setex(cacheKey(uid), maxAge,
+              String.join(":", token, currentTime(), incId, perms));
     }
 
     if (response != null) {
-      Cookie uidCookie = new Cookie("uid", uid);
-      uidCookie.setPath("/");
-      uidCookie.setDomain(domain);
-      uidCookie.setMaxAge(maxAge);
-      response.addCookie(uidCookie);
-
-      Cookie tokenCookie = new Cookie("token", token);
-      tokenCookie.setPath("/");
-      tokenCookie.setDomain(domain);
-      tokenCookie.setMaxAge(maxAge);
-      tokenCookie.setHttpOnly(true);
-      response.addCookie(tokenCookie);
+      response.addCookie(newCookie("uid", uid, maxAge, false));
+      response.addCookie(newCookie("token", token, maxAge, true));
     }
 
     return token;    
@@ -79,36 +131,30 @@ public class RedisRememberMeService implements RememberMeServices {
 
   public void logout(long uid, HttpServletResponse response) {
     try (Jedis c = jedisPool.getResource()) {
-      c.del(KEY_PREFIX + String.valueOf(uid));
+      c.del(cacheKey(uid));
     }
     
     if (response != null) {
-      Cookie uidCookie = new Cookie("uid", null);
-      uidCookie.setMaxAge(0);
-      uidCookie.setPath("/");
-      uidCookie.setDomain(domain);
-      response.addCookie(uidCookie);
-
-      Cookie token = new Cookie("token", null);
-      token.setMaxAge(0);
-      token.setPath("/");
-      token.setDomain(domain);
-      response.addCookie(token);
+      response.addCookie(newCookie("uid", null, 0, false));
+      response.addCookie(newCookie("token", null, 0, true));
     }
   }
 
-  public boolean updatePerm(long uid, int perm) {
+  public boolean update(User user) {
+    String incId = user.getIncId() == Integer.MIN_VALUE ? "" : String.valueOf(user.getIncId());
+    String perms = permsToString(user.getPerms());
+    
     String token = null;
     try (Jedis c = jedisPool.getResource()) {
-      String key = KEY_PREFIX + String.valueOf(uid);
+      String key = cacheKey(user.getUid());
       token = c.get(key);
       
       if (token == null) return false;
-      String parts[] = token.split(":", 4);
-      if (parts.length != 4) return false;
+      String parts[] = token.split(":", PARTS_NUMBER);
+      if (parts.length != PARTS_NUMBER) return false;
       
       c.setex(key, maxAge,
-              String.join(":", parts[0], parts[1], String.valueOf(perm), parts[3]));
+              String.join(":", parts[0], parts[1], currentTime(), incId, perms));
     }
     return true;
   }
@@ -119,31 +165,32 @@ public class RedisRememberMeService implements RememberMeServices {
     String parts[] = token.split(":", 2);
     if (parts.length != 2) return null;
 
+    String key = cacheKey(parts[0]);
+
     String savedToken = null;
     try (Jedis c = jedisPool.getResource()) {
-      savedToken = c.get(KEY_PREFIX + parts[0]);
+      savedToken = c.get(key);
     }
     
     if (savedToken == null) return null;
-    String savedParts[] = savedToken.split(":", 4);
-    if (savedParts.length != 4) return null;
+    String savedParts[] = savedToken.split(":", PARTS_NUMBER);
+    if (savedParts.length != PARTS_NUMBER) return null;
     
     if (!savedParts[0].equals(parts[0]) || !savedParts[1].equals(parts[1])) {
       return null;
     }
     
-    long createAt = Long.valueOf(savedParts[3]);
+    long createAt = Long.valueOf(savedParts[2]);
     long now = System.currentTimeMillis()/1000;
     if (createAt + maxAge/2 < now) {
       try (Jedis c = jedisPool.getResource()) {
-        c.setex(KEY_PREFIX + parts[0], maxAge,
-                String.join(":", token, savedParts[2], Long.toString(now)));
+        c.setex(key, maxAge,
+                String.join(":", token, Long.toString(now), savedParts[3], savedParts[4]));
       }
     }
-
-    long uid = Long.valueOf(parts[0]);
-    int  perm = savedParts[2].length() == 0 ? Integer.MIN_VALUE : Integer.valueOf(savedParts[2]);
-    return new User(uid, perm);
+    
+    int incId = savedParts[3].isEmpty()? Integer.MIN_VALUE : Integer.valueOf(savedParts[3]);
+    return new User(Long.valueOf(parts[0]), incId, stringToPerms(savedParts[4]));
   }
 
   @Override
@@ -167,10 +214,13 @@ public class RedisRememberMeService implements RememberMeServices {
     User user = checkToken(token);
     if (user == null) return null;
 
-    String role = "ROLE_PERM";
-    if (user.getPerm() != Integer.MIN_VALUE) role = role + String.valueOf(user.getPerm());
+    List<GrantedAuthority> grantedAuths = new ArrayList<>();
+    if (user.getPerms() != null) {
+      for (Long perm : user.getPerms()) {
+        grantedAuths.add(new SimpleGrantedAuthority("ROLE_PERM" + String.valueOf(perm)));
+      }
+    }
 
-    List<GrantedAuthority> grantedAuths = Arrays.asList(new SimpleGrantedAuthority(role));
     return new RememberMeAuthenticationToken("N/A", user, grantedAuths);
   }
 

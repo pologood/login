@@ -102,7 +102,7 @@ public class LoginController {
       }
     } else if (oldPassword.isPresent()) {
       if (user != null) {
-        return loginManager.resetPassword(user.getUid(), password, oldPassword.get(), response);
+        return loginManager.resetPassword(user, password, oldPassword.get(), response);
       } else {
         return ApiResult.unAuthorized();
       }
@@ -112,17 +112,14 @@ public class LoginController {
   }
 
   @ApiMethod(description = "update account")
-  @RequestMapping(value = {"/account", "/account/{id}"}, method = RequestMethod.PUT,
+  @RequestMapping(value = "/account", method = RequestMethod.PUT,
                   consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE}
   )
   public ApiResult updateAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user,
-    @ApiPathParam(name = "id", description = "other account's id")
-    @PathVariable Optional<Long> id,
     @ApiBodyObject Account account) {
-
-    account.setId(id.orElse(user.getUid()));
-    return loginManager.updateAccount(user, account);
+    account.setId(user.getUid());
+    return loginManager.updateAccount(account);
   }
 
   @ApiMethod(description = "get account")

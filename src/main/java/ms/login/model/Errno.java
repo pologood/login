@@ -16,6 +16,8 @@ public class Errno {
   public static final int USER_EXISTS         = 1100;
   public static final int USER_NOT_FOUND      = 1101;
   public static final int USER_PASSWORD_ERROR = 1102;
+  public static final int EXPIRED_INVATATION_CODE = 1103;
+  public static final int INVALID_INVATATION_CODE = 1104;
 
   public static String getMessage(int code) {
     switch (code) {
