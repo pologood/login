@@ -50,3 +50,10 @@ CREATE TABLE IF NOT EXISTS `address` (
   `address9` TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
   
+CREATE TABLE IF NOT EXISTS `openAccount` (
+  `openId`               VARCHAR(64) UNIQUE,
+  `token`                VARCHAR(256),
+  `tokenExpireAt`        DATETIME,
+  `refreshToken`,        VARCHAR(256),
+  `refreshTokenExpireAt` DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

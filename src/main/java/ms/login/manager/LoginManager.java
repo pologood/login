@@ -23,6 +23,7 @@ public class LoginManager {
   @Autowired AccountMapper  accountMapper;
   @Autowired JedisPool      jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
+  @Autowired LoginServiceProvider   loginServiceProvider;
 
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
 
@@ -155,7 +156,7 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getAccount(RedisRememberMeService.User user, Optional<String> accountName) {
+  public ApiResult getLocalAccount(RedisRememberMeService.User user, Optional<String> accountName) {
     Account account;
     if (accountName.isPresent()) {
       account = isEmail(accountName.get()) ? accountMapper.findByEmail(accountName.get()) :
@@ -171,8 +172,21 @@ public class LoginManager {
     } else {
       account = accountMapper.find(user.getUid());      
     }
+    
     if (account == null) return ApiResult.notFound();
     return new ApiResult<Account>(account);
+  }
+
+  public ApiResult getOpenAccount(String openId) {
+    LoginService service = loginServiceProvider.get(openId);
+    if (service == null) return ApiResult.unAuthorized();
+    LoginService.User user = service.info(openId);
+    if (user == null) return ApiResult.unAuthorized();
+    else return new ApiResult<LoginService.User>(user);
+  }
+
+  public ApiResult getAccount(RedisRememberMeService.User user, Optional<String> accountName) {
+    return user.isOpen() ? getOpenAccount(user.getId()) : getLocalAccount(user, accountName);
   }
 
   public ApiResult login(String accountName, String password,
@@ -204,7 +218,17 @@ public class LoginManager {
     return new ApiResult<String>(token);
   }
 
-  public ApiResult logout(long id, HttpServletResponse response) {
+  public ApiResult login(String tmpToken, LoginServiceProvider.Name provider,
+                         HttpServletResponse response) {
+    LoginService service = loginServiceProvider.get(provider);
+    LoginService.User user = service.login(tmpToken);
+    if (user == null) return ApiResult.unAuthorized();
+
+    String token = rememberMeService.login(response, new User(user.getOpenId()));
+    return new ApiResult<String>(token);
+  }
+
+  public ApiResult logout(String id, HttpServletResponse response) {
     rememberMeService.logout(id, response);
     return ApiResult.ok();
   }

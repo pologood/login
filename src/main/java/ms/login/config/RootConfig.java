@@ -43,4 +43,13 @@ public class RootConfig {
       env.getRequiredProperty("web.host"),
       86400 * 7);
   }
+
+  @Bean
+  public LoginServiceProvider loginServiceProvider() {
+    XiaopLoginService xiaop = new XiaopLoginService(jedisPool());
+    
+    LoginServiceProvider provider = new LoginServiceProvider();
+    provider.register(LoginServiceProvider.Name.XiaoP, xiaop);
+    return provider;
+  }
 }

@@ -31,12 +31,24 @@ public class RedisRememberMeService implements RememberMeServices {
       this.permIds = permIds;
     }
 
+    public User(String openId) {
+      this.openId = Optional.of(openId);
+      this.incId = Integer.MIN_VALUE;
+      this.permIds = null;
+    }
+
+    public boolean isOpen() {
+      return !(uid != null && uid.isPresent());
+    }
+
     public long getUid() {
       return uid.get();
     }
 
     public String getId() {
-      return uid.isPresent() ? String.valueOf(uid.get()) : openId.get();
+      if (uid != null && uid.isPresent()) return String.valueOf(uid.get());
+      else if (openId != null && openId.isPresent()) return openId.get();
+      else return null;
     }
 
     public int getIncId() {
@@ -110,28 +122,28 @@ public class RedisRememberMeService implements RememberMeServices {
   }
   
   public String login(HttpServletResponse response, User user) {
-    String uid  = String.valueOf(user.getUid());
+    String id  = user.getId();
     String incId = user.getIncId() == Integer.MIN_VALUE ? "" : String.valueOf(user.getIncId());
     String perms = permsToString(user.getPerms());
 
-    String token = String.join(":", uid, StringHelper.random(32));
+    String token = String.join(":", id, StringHelper.random(32));
 
     try (Jedis c = jedisPool.getResource()) {
-      c.setex(cacheKey(uid), maxAge,
+      c.setex(cacheKey(id), maxAge,
               String.join(":", token, currentTime(), incId, perms));
     }
 
     if (response != null) {
-      response.addCookie(newCookie("uid", uid, maxAge, false));
+      response.addCookie(newCookie("uid", id, maxAge, false));
       response.addCookie(newCookie("token", token, maxAge, true));
     }
 
     return token;    
   }
 
-  public void logout(long uid, HttpServletResponse response) {
+  public void logout(String id, HttpServletResponse response) {
     try (Jedis c = jedisPool.getResource()) {
-      c.del(cacheKey(uid));
+      c.del(cacheKey(id));
     }
     
     if (response != null) {
@@ -188,9 +200,13 @@ public class RedisRememberMeService implements RememberMeServices {
                 String.join(":", token, Long.toString(now), savedParts[3], savedParts[4]));
       }
     }
-    
-    int incId = savedParts[3].isEmpty()? Integer.MIN_VALUE : Integer.valueOf(savedParts[3]);
-    return new User(Long.valueOf(parts[0]), incId, stringToPerms(savedParts[4]));
+
+    if (parts[0].indexOf('_') != -1) {
+      return new User(parts[0]);
+    } else {
+      int incId = savedParts[3].isEmpty()? Integer.MIN_VALUE : Integer.valueOf(savedParts[3]);
+      return new User(Long.valueOf(parts[0]), incId, stringToPerms(savedParts[4]));
+    }
   }
 
   @Override

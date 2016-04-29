@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import commons.spring.RedisRememberMeService;
+import commons.saas.LoginServiceProvider;
 import ms.login.model.*;
 import ms.login.entity.*;
 import ms.login.manager.*;
@@ -126,7 +127,7 @@ public class LoginController {
   @RequestMapping(value = {"/account", "/account/{account}"}, method = RequestMethod.GET)
   public ApiResult getAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user,
-    @ApiPathParam(name = "account", description = "other account's phone OR email")
+    @ApiPathParam(name = "account", description = "other account's phone OR email OR openId")
     @PathVariable Optional<String> account) {
     return loginManager.getAccount(user, account);
   }
@@ -144,11 +145,31 @@ public class LoginController {
     return loginManager.login(account, password, idcode, response);
   }
 
+  @ApiMethod(description = "xiaop oauth login")
+  @RequestMapping(value = "/login/oauth/xiaop", method = RequestMethod.GET)
+  public ApiResult login(
+    @ApiQueryParam(name = "token", description = "oauth token")
+    @RequestParam String token,
+    HttpServletResponse response) {
+    return loginManager.login(token, LoginServiceProvider.Name.XiaoP, response);
+  }
+
+  @ApiMethod(description = "oauth login")
+  @RequestMapping(value = "/login/oauth", method = RequestMethod.GET)
+  public ApiResult login(
+    @ApiQueryParam(name = "token", description = "oauth token")
+    @RequestParam String token,
+    @ApiQueryParam(name = "provider", description = "login service provider")
+    @RequestParam LoginServiceProvider.Name provider,
+    HttpServletResponse response) {
+    return loginManager.login(token, provider, response);
+  }
+
   @ApiMethod(description = "logout")
   @RequestMapping(value = "/logout", method = RequestMethod.GET)
   public ApiResult logout(
     @AuthenticationPrincipal RedisRememberMeService.User user,
     HttpServletResponse response) {
-    return loginManager.logout(user.getUid(), response);
+    return loginManager.logout(user.getId(), response);
   }
 }
