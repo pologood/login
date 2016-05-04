@@ -120,7 +120,7 @@ public class LoginController {
     @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiBodyObject Account account) {
     account.setId(user.getUid());
-    return loginManager.updateAccount(account);
+    return loginManager.updateAccount(user, account);
   }
 
   @ApiMethod(description = "get account")

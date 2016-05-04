@@ -32,7 +32,7 @@ public interface AccountMapper {
       }
       sql.VALUES("password", "#{password}");
       sql.VALUES("incId", "#{incId}");
-      sql.VALUES("perms", "#{perm}");
+      sql.VALUES("perm", "#{perm}");
       return sql.toString();
     }
 

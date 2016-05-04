@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS account DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+-- CREATE DATABASE IF NOT EXISTS account DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `account`  (
   `id`       BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -23,10 +23,11 @@ CREATE TABLE IF NOT EXISTS `sysPerm`  (
 
 CREATE TABLE IF NOT EXISTS `incPerm`  (
   `id`       BIGINT AUTO_INCREMENT PRIMARY KEY,
-  `incId`    INT(11) KEY,
+  `incId`    INT(11),
   `name`     VARCHAR(64),
   `desc`     TEXT,
-  `createAt` TIMESTAMP
+  `createAt` TIMESTAMP,
+  INDEX(`incId`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10000000 DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `permission`  (
@@ -49,11 +50,11 @@ CREATE TABLE IF NOT EXISTS `address` (
   `address8` TEXT,
   `address9` TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-  
-CREATE TABLE IF NOT EXISTS `openAccount` (
-  `openId`               VARCHAR(64) UNIQUE,
-  `token`                VARCHAR(256),
-  `tokenExpireAt`        DATETIME,
-  `refreshToken`,        VARCHAR(256),
-  `refreshTokenExpireAt` DATETIME
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- CREATE TABLE IF NOT EXISTS `openAccount` (
+--  `openId`               VARCHAR(64) UNIQUE,
+--  `token`                VARCHAR(256),
+--  `tokenExpireAt`        DATETIME,
+--  `refreshToken`,        VARCHAR(256),
+--  `refreshTokenExpireAt` DATETIME
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

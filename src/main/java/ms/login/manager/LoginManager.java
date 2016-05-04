@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.servlet.http.HttpServletResponse;
 import redis.clients.jedis.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import org.springframework.http.*;
@@ -26,6 +27,12 @@ public class LoginManager {
   @Autowired LoginServiceProvider   loginServiceProvider;
 
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
+  private String smsRegisterTemplate;
+
+  @Autowired
+  public LoginManager(Environment env) {
+    smsRegisterTemplate = env.getRequiredProperty("sms.register.template");
+  }
 
   private boolean isEmail(String account) {
     return account.indexOf('@') != -1;
@@ -78,11 +85,11 @@ public class LoginManager {
   }
 
   public ApiResult getRegisterCode(String account) {
-    String rand = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 9999));
+    int rand = ThreadLocalRandom.current().nextInt(100000, 999999);
     if (isEmail(account)) {
       throw new RuntimeException("not implemented");
     } else {
-      smsService.send(account, rand, "【搜狗科技】你的验证码是 " + rand);
+      smsService.send(account, String.valueOf(rand), String.format(smsRegisterTemplate, rand));
     }
     return ApiResult.ok();
   }
@@ -149,10 +156,16 @@ public class LoginManager {
     }
   }
 
-  public ApiResult updateAccount(Account account) {
+  public ApiResult updateAccount(RedisRememberMeService.User user, Account account) {
     account.setStatus(null);
     account.setPerm(Long.MAX_VALUE);
     accountMapper.update(account);
+    
+    if (account.getName() != null) {
+      user.setName(account.getName());
+      rememberMeService.update(user);
+    }
+    
     return ApiResult.ok();
   }
 
@@ -213,7 +226,7 @@ public class LoginManager {
     }
 
     String token = rememberMeService.login(
-      response, new User(account.getId(), account.getIncId(), permIds));
+      response, new User(account.getId(), account.getName(), account.getIncId(), permIds));
     
     return new ApiResult<String>(token);
   }
@@ -224,7 +237,7 @@ public class LoginManager {
     LoginService.User user = service.login(tmpToken);
     if (user == null) return ApiResult.unAuthorized();
 
-    String token = rememberMeService.login(response, new User(user.getOpenId()));
+    String token = rememberMeService.login(response, new User(user.getOpenId(), user.getName()));
     return new ApiResult<String>(token);
   }
 
