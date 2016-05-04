@@ -198,6 +198,14 @@ public class RedisRememberMeService implements RememberMeServices {
     CacheEntity cacheEntity = CacheEntity.buildFromUser(user);
 
     try (Jedis c = jedisPool.getResource()) {
+      String key = cacheKey(cacheEntity.uid);
+      String token = c.get(key);
+      if (token != null) {
+        String parts[] = token.split(":");
+        if (parts.length >= 2) {
+          cacheEntity.token = parts[1];
+        }
+      }
       c.setex(cacheKey(cacheEntity.uid), maxAge, cacheEntity.toString());
     }
 
