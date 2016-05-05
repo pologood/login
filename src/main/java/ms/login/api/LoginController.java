@@ -75,8 +75,16 @@ public class LoginController {
     @ApiQueryParam(name = "regcode", description = "register code")
     @RequestParam String regcode,
     @ApiQueryParam(name = "password", description = "password")
-    @RequestParam String password) {
-    return loginManager.addAccount(account, password, regcode);
+    @RequestParam String password,
+    @ApiQueryParam(name = "name", description = "user nickname or realname", format = "\\w{1,16}")
+    @RequestParam Optional<String> name,
+    HttpServletResponse response) {
+    if (name.isPresent()) {
+      if (name.get().length() > 16) {
+        return ApiResult.badRequest("length(name) <= 16");
+      }
+    }
+    return loginManager.addAccount(account, password, regcode, name, response);
   }
 
   @ApiMethod(description = "reset password, use regcode or oldPassword")
@@ -119,18 +127,44 @@ public class LoginController {
   public ApiResult updateAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiBodyObject Account account) {
+    if (account.getName() != null) {
+      if (account.getName().length() > 16) {
+        return ApiResult.badRequest("length(name) <= 16");
+      }
+    }
+      
     account.setId(user.getUid());
     return loginManager.updateAccount(user, account);
   }
 
   @ApiMethod(description = "get account")
-  @RequestMapping(value = {"/account", "/account/{account}"}, method = RequestMethod.GET)
+  @RequestMapping(value = "/account", method = RequestMethod.GET)
+  public ApiResult getAccount(
+    @AuthenticationPrincipal RedisRememberMeService.User user) {
+    return loginManager.getAccount(user);
+  }
+  
+  @ApiMethod(description = "get other user account")
+  @RequestMapping(value = "/account/{account}", method = RequestMethod.GET)
   public ApiResult getAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiPathParam(name = "account", description = "other account's phone OR email OR openId")
-    @PathVariable Optional<String> account) {
-    return loginManager.getAccount(user, account);
+    @PathVariable String account,
+    @ApiQueryParam(name = "token", description = "use token to access other account")
+    @RequestParam Optional<String> token) {
+    return loginManager.getAccount(user, account, token);
   }
+
+  @ApiMethod(description = "get other user account")
+  @RequestMapping(value = "/account/uid/{uid}", method = RequestMethod.GET)
+  public ApiResult getAccount(
+    @AuthenticationPrincipal RedisRememberMeService.User user,
+    @ApiPathParam(name = "uid", description = "other account's uid")
+    @PathVariable long uid,
+    @ApiQueryParam(name = "token", description = "use token to access other account")
+    @RequestParam Optional<String> token) {
+    return loginManager.getAccount(user, uid, token);
+  }  
 
   @ApiMethod(description = "login, phone OR email must provide one")
   @RequestMapping(value = "/login", method = RequestMethod.GET)

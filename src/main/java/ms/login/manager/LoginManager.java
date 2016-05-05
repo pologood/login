@@ -22,16 +22,19 @@ public class LoginManager {
   @Autowired PatchcaService patchcaService;
   @Autowired SmsService     smsService;
   @Autowired AccountMapper  accountMapper;
+  @Autowired AccountPermMapper accountPermMapper;
   @Autowired JedisPool      jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
   @Autowired LoginServiceProvider   loginServiceProvider;
 
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
   private String smsRegisterTemplate;
+  private String tokenKey;
 
   @Autowired
   public LoginManager(Environment env) {
     smsRegisterTemplate = env.getRequiredProperty("sms.register.template");
+    tokenKey = env.getProperty("security.token");
   }
 
   private boolean isEmail(String account) {
@@ -94,7 +97,8 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
-  public ApiResult addAccount(String accountName, String password, String regcode) {
+  public ApiResult addAccount(String accountName, String password, String regcode,
+                              Optional<String> name, HttpServletResponse response) {
     Account account = new Account();
     String code;
     if (isEmail(accountName)) {
@@ -109,6 +113,8 @@ public class LoginManager {
       return new ApiResult(Errno.IDENTIFY_CODE_ERROR);
     }
 
+    if (name.isPresent()) account.setName(name.get());
+
     try {
       account.setPassword(encodePassword(password));
       accountMapper.add(account);
@@ -116,7 +122,9 @@ public class LoginManager {
       return new ApiResult(Errno.USER_EXISTS);
     }
 
-    return new ApiResult<Account>(account);
+    String token = rememberMeService.login(
+      response, new User(account.getId(), account.getName()));
+    return new ApiResult<String>(token);
   }
 
   public ApiResult resetPassword(String accountName, String password,
@@ -169,27 +177,15 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getLocalAccount(RedisRememberMeService.User user, Optional<String> accountName) {
-    Account account;
-    if (accountName.isPresent()) {
-      account = isEmail(accountName.get()) ? accountMapper.findByEmail(accountName.get()) :
-        accountMapper.findByPhone(accountName.get());
-      if (account != null) {
-        if (account.getId() == user.getUid() || 
-            (account.getIncId() == user.getIncId() && account.getPerm() == user.getPerm())) {
-          // permission allow
-        } else {
-          account = null;
-        }
-      }
-    } else {
-      account = accountMapper.find(user.getUid());      
-    }
-    
-    if (account == null) return ApiResult.notFound();
-    return new ApiResult<Account>(account);
+  public Account getLocalAccount(String accountName) {
+    return isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+      accountMapper.findByPhone(accountName);
   }
 
+  public Account getLocalAccount(long uid) {
+    return accountMapper.find(uid);      
+  }
+    
   public ApiResult getOpenAccount(String openId) {
     LoginService service = loginServiceProvider.get(openId);
     if (service == null) return ApiResult.unAuthorized();
@@ -198,8 +194,40 @@ public class LoginManager {
     else return new ApiResult<LoginService.User>(user);
   }
 
-  public ApiResult getAccount(RedisRememberMeService.User user, Optional<String> accountName) {
-    return user.isOpen() ? getOpenAccount(user.getId()) : getLocalAccount(user, accountName);
+  public ApiResult getAccount(User user) {
+    if (user.isOpen()) {
+      return getOpenAccount(user.getId());
+    } else {
+      Account account = getLocalAccount(user.getUid());
+      if (account == null) return ApiResult.notFound();
+      else return new ApiResult<Account>(account);
+    }
+  }
+
+  public ApiResult getAccount(User user, String accountName, Optional<String> token) {
+    Account account = getLocalAccount(accountName);
+    return getAccountPermCheck(account, user, token);
+  }
+
+  public ApiResult getAccount(User user, long uid, Optional<String> token) {
+    Account account = getLocalAccount(uid);
+    return getAccountPermCheck(account, user, token);
+  }
+
+  public ApiResult getAccountPermCheck(Account account, User user, Optional<String> token) {
+    if (account == null) return ApiResult.notFound();
+
+    if (token.isPresent()) {
+      String text = user.getId() + ":" + String.valueOf(account.getId());
+      if (text.equals(DigestHelper.hmacSHA1(token.get(), text.getBytes()))) {
+        return new ApiResult<Account>(account);
+      }
+    } else {
+      if (account.getIncId() != Integer.MIN_VALUE && account.getIncId() == user.getIncId()) {
+        return new ApiResult<Account>(account);
+      }
+    }
+    return ApiResult.notFound();
   }
 
   public ApiResult login(String accountName, String password,
@@ -222,7 +250,7 @@ public class LoginManager {
 
     List<Long> permIds = null;
     if (account.getPerm() == Account.PERM_EXIST) {
-//      permIds = permissionMapper.get(account.getId());
+      permIds = accountPermMapper.get(account.getId());
     }
 
     String token = rememberMeService.login(

@@ -9,6 +9,8 @@ public interface AccountPermMapper {
   class Sql {
     static final String TABLE  = "permission";
     static final String SELECT = "SELECT * FROM " + TABLE + " WHERE uid = #{uid}";
+    static final String SELECT_PERM = "SELECT perm FROM " + TABLE + " WHERE uid = #{uid}";
+      
     static final String DELETE = "DELETE FROM " + TABLE +
       " WHERE uid = #{uid} AND permId = #{permId}";
     static final String DELETE_ALL = "DELETE FROM " + TABLE + " WHERE uid = #{uid}";
@@ -27,6 +29,9 @@ public interface AccountPermMapper {
 
   @Select(Sql.SELECT)
   List<AccountPerm> getAll(long uid);
+
+  @Select(Sql.SELECT_PERM)
+  List<Long> get(long uid);
 
   @InsertProvider(type = Sql.class, method = "insert")
   int add(List<AccountPerm> perms);

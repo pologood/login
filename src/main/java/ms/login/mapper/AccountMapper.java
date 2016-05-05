@@ -30,6 +30,9 @@ public interface AccountMapper {
       if (account.getEmail() != null) {
         sql.VALUES("email", "#{email}");
       }
+      if (account.getName() != null) {
+        sql.VALUES("name", "#{name}");
+      }
       sql.VALUES("password", "#{password}");
       sql.VALUES("incId", "#{incId}");
       sql.VALUES("perm", "#{perm}");

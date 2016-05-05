@@ -133,7 +133,7 @@ public class RedisRememberMeService implements RememberMeServices {
       CacheEntity entity = new CacheEntity();
       entity.uid      = user.getId();
       entity.token    = StringHelper.random(32);
-      entity.name     = user.getName();  
+      entity.name     = user.getName() == null ? "" : user.getName();
       entity.createAt = Long.toString(System.currentTimeMillis()/1000);
       entity.incId    = user.getIncIdString();
       entity.perms    = user.getPermsString();
