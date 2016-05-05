@@ -219,7 +219,7 @@ public class LoginManager {
 
     if (token.isPresent()) {
       String text = user.getId() + ":" + String.valueOf(account.getId());
-      if (text.equals(DigestHelper.hmacSHA1(token.get(), text.getBytes()))) {
+      if (token.get().equals(DigestHelper.hmacSHA1(tokenKey, text.getBytes()))) {
         return new ApiResult<Account>(account);
       }
     } else {
