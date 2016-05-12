@@ -14,6 +14,11 @@ public abstract class SmsService {
   }
 
   protected abstract void sendInternal(String phone, String msg) throws SmsException;
+
+  public boolean send(String phone, String msg) throws SmsException {
+    sendInternal(phone, msg);
+    return true;
+  }
   
   public boolean send(String phone, String code, String msg) throws SmsException {
     String sendedCode;
@@ -31,12 +36,14 @@ public abstract class SmsService {
     return true;
   };
 
-  public String get(String phone) {
+  public String get(String phone, String regcode) {
     String code;
     String key = CODE_PREFIX + phone;
     try (Jedis c = jedisPool.getResource()) {
       code = c.get(key);
-      c.del(key);         // sms code is one-off
+      if (regcode != null && regcode.equals(code)) {
+        c.del(key);         // sms code is one-off
+      }
     }
     return code;
   }

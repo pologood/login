@@ -69,6 +69,18 @@ public class RedisRememberMeService implements RememberMeServices {
       return incId == Integer.MIN_VALUE ? "" : String.valueOf(incId);
     }
 
+    public boolean isPlatformBoss() {
+      return getPerm() == 0;
+    }
+
+    public boolean isPlatformAdmin() {
+      return getPerm() <= 10;
+    }
+
+    public boolean isBoss() {
+      return getPerm() == 100;
+    }
+
     public long getPerm() {
       if (permIds == null) return Long.MAX_VALUE;
       else return permIds.get(0);
@@ -165,16 +177,24 @@ public class RedisRememberMeService implements RememberMeServices {
       }
     }
   }
-  
+
+  private Set<String> tokenPool = new HashSet<>();
   private JedisPool jedisPool;
   private String    domain;
   private int       maxAge;
   private static final String KEY_PREFIX   = "RedisRMS_";
 
   public RedisRememberMeService(JedisPool jedisPool, String domain, int maxAge) {
+    this(jedisPool, "", domain, maxAge);
+  }
+  public RedisRememberMeService(JedisPool jedisPool, String tokenPool, String domain, int maxAge) {
     this.jedisPool = jedisPool;
     this.domain = domain;
     this.maxAge = maxAge;
+
+    for (String token : tokenPool.split(",")) {
+      this.tokenPool.add(token);
+    }
   }
 
   private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
@@ -275,8 +295,24 @@ public class RedisRememberMeService implements RememberMeServices {
     return cacheEntity.toUser();
   }
 
-  @Override
-  public Authentication autoLogin(HttpServletRequest request, HttpServletResponse response) {
+  Authentication autoLoginByTokenPool(HttpServletRequest request) {
+    if (tokenPool.isEmpty()) return null;
+    
+    String queryString = request.getParameter("__token");
+    if (queryString == null) {
+      queryString = request.getHeader("authorization");
+    }
+    if (queryString == null || !tokenPool.contains(queryString)) return null;
+
+    User user = new User("__", "__token");
+    List<GrantedAuthority> grantedAuths = Arrays.asList(
+      new SimpleGrantedAuthority("ROLE_SYSINTERNAL")
+      );
+    
+    return new RememberMeAuthenticationToken("N/A", user, grantedAuths);
+  }
+
+  Authentication autoLoginByRedisPool(HttpServletRequest request) {
     String token = null;
     
     Cookie[] cookies = request.getCookies();
@@ -304,6 +340,13 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     return new RememberMeAuthenticationToken("N/A", user, grantedAuths);
+  }
+
+  @Override
+  public Authentication autoLogin(HttpServletRequest request, HttpServletResponse response) {
+    Authentication auth = autoLoginByTokenPool(request);
+    if (auth != null) return auth;
+    return autoLoginByRedisPool(request);
   }
 
   @Override

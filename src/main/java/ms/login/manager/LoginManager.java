@@ -105,7 +105,7 @@ public class LoginManager {
       code = null;
       account.setEmail(accountName);
     } else {
-      code = smsService.get(accountName);
+      code = smsService.get(accountName, regcode);
       account.setPhone(accountName);
     }
 
@@ -137,7 +137,7 @@ public class LoginManager {
     if (isEmail) {
       code = null;
     } else {
-      code = smsService.get(accountName);
+      code = smsService.get(accountName, regcode);
     }
 
     if (!regcode.equals(code)) {
