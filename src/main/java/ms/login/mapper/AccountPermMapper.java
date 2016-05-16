@@ -9,7 +9,7 @@ public interface AccountPermMapper {
   class Sql {
     static final String TABLE  = "permission";
     static final String SELECT = "SELECT * FROM " + TABLE + " WHERE uid = #{uid}";
-    static final String SELECT_PERM = "SELECT perm FROM " + TABLE + " WHERE uid = #{uid}";
+    static final String SELECT_PERM = "SELECT permId FROM " + TABLE + " WHERE uid = #{uid}";
       
     static final String DELETE = "DELETE FROM " + TABLE +
       " WHERE uid = #{uid} AND permId = #{permId}";

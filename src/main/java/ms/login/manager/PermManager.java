@@ -118,7 +118,7 @@ public class PermManager {
       for (long perm : permIds) {
         boolean hasPerm = false;
         for (AccountPerm userPerm : userPerms) {
-          if (userPerm.getPerm() == perm) hasPerm = userPerm.getGrant();
+          if (userPerm.getPermId() == perm) hasPerm = userPerm.getGrant();
         }
         if (!hasPerm) return ApiResult.forbidden();
       }
@@ -129,7 +129,7 @@ public class PermManager {
       AccountPerm perm = new AccountPerm();
       perm.setUid(uid);
       perm.setIncId(user.getIncId());
-      perm.setPerm(permIds.get(i));
+      perm.setPermId(permIds.get(i));
       perm.setGrant(options.get(i));
 
       perms.add(perm);

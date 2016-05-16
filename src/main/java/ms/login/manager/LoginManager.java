@@ -249,7 +249,9 @@ public class LoginManager {
     }
 
     List<Long> permIds = null;
-    if (account.getPerm() == Account.PERM_EXIST) {
+    if (account.getPerm() != Long.MAX_VALUE) {
+      permIds = Arrays.asList(account.getPerm());
+    } else if (account.getPerm() == Account.PERM_EXIST) {
       permIds = accountPermMapper.get(account.getId());
     }
 

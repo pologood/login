@@ -11,7 +11,7 @@ public class AccountPerm {
   long   incId;
 
   @ApiObjectField(description = "permission id")
-  long   perm;
+  long   permId;
 
   @ApiObjectField(description = "grant option")
   boolean grant = false;
@@ -30,11 +30,11 @@ public class AccountPerm {
     return this.incId;
   }
 
-  public void setPerm(long perm) {
-    this.perm = perm;
+  public void setPermId(long permId) {
+    this.permId = permId;
   }
-  public long getPerm() {
-    return this.perm;
+  public long getPermId() {
+    return this.permId;
   }
 
   public void setGrant(boolean grant) {
