@@ -11,6 +11,7 @@ import commons.spring.*;
 
 @Configuration
 @ComponentScan({ProjectInfo.PKG_PREFIX + ".api", ProjectInfo.PKG_PREFIX + ".manager"})
+@PropertySource("classpath:application-default.properties")
 @PropertySource("classpath:application-${spring.profiles.active}.properties")
 public class RootConfig {
   @Autowired Environment env;
