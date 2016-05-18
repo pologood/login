@@ -11,11 +11,13 @@ public class Errno {
   public static final int NOT_IMPLEMENT       = 501;
   public static final int SERVICE_UNAVAILABLE = 503;
 
-  public static final int IDENTIFY_CODE_ERROR = 1000;
+  public static final int IDENTIFY_CODE_ERROR    = 1000;
   public static final int IDENTIFY_CODE_REQUIRED = 1001;
-  public static final int USER_EXISTS         = 1100;
-  public static final int USER_NOT_FOUND      = 1101;
-  public static final int USER_PASSWORD_ERROR = 1102;
+  public static final int SMS_CODE_ERROR         = 1002;
+  
+  public static final int USER_EXISTS             = 1100;
+  public static final int USER_NOT_FOUND          = 1101;
+  public static final int USER_PASSWORD_ERROR     = 1102;
   public static final int EXPIRED_INVATATION_CODE = 1103;
   public static final int INVALID_INVATATION_CODE = 1104;
 
@@ -28,6 +30,16 @@ public class Errno {
     case NOT_ACCEPT: return "not acceptable";
     case INTERNAL_ERROR: return "internal server error";
     case SERVICE_UNAVAILABLE: return "service unavailable";
+
+    case IDENTIFY_CODE_ERROR: return "identify code error";
+    case IDENTIFY_CODE_REQUIRED: return "identify code required";
+    case SMS_CODE_ERROR: return "sms code error";
+
+    case USER_EXISTS: return "user exists";
+    case USER_NOT_FOUND: return "user not found";
+    case USER_PASSWORD_ERROR: return "password error";
+    case EXPIRED_INVATATION_CODE: return "invatation code expired";
+    case INVALID_INVATATION_CODE: return "invalid invatation";
     default: return "";
     }
   }

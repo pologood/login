@@ -52,17 +52,16 @@ public class LoginManager {
     return DigestHelper.sha1((password + parts[0]).getBytes()).equals(parts[1]);
   }
 
-  private int checkPatchca(String id, Optional<String> idcode) {
-    String errCnt = null;
-    try (Jedis c = jedisPool.getResource()) {
-      errCnt = c.get(LOGIN_ERROR_PREFIX + id);
-    }
+  private int checkPatchca(String accountName, String id, Optional<String> idcode) {
+    String key = LOGIN_ERROR_PREFIX + accountName;
+    String errCnt = JedisHelper.get(jedisPool, key);
+
     if (errCnt != null && Integer.valueOf(errCnt) >= 3) {
       if (idcode.isPresent()) {
-        String text = patchcaService.getText(id);
-        if (!idcode.get().equals(text)) {
+        if (!patchcaService.checkText(id, idcode.get())) {
           return Errno.IDENTIFY_CODE_ERROR;
         }
+        JedisHelper.del(jedisPool, key);
       } else {
         return Errno.IDENTIFY_CODE_REQUIRED;
       }
@@ -110,7 +109,7 @@ public class LoginManager {
     }
 
     if (!regcode.equals(code)) {
-      return new ApiResult(Errno.IDENTIFY_CODE_ERROR);
+      return new ApiResult(Errno.SMS_CODE_ERROR);
     }
 
     if (name.isPresent()) account.setName(name.get());
@@ -127,9 +126,9 @@ public class LoginManager {
     return new ApiResult<String>(token);
   }
 
-  public ApiResult resetPassword(String accountName, String password,
-                                 String regcode, Optional<String> idcode) {
-    int errno = checkPatchca(accountName, idcode);
+  public ApiResult resetPassword(String accountName, String password, String regcode,
+                                 Optional<String> id, Optional<String> idcode) {
+    int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
     if (errno != Errno.OK) return new ApiResult(errno);
 
     String code;
@@ -142,8 +141,8 @@ public class LoginManager {
 
     if (!regcode.equals(code)) {
       errno = logLoginError(accountName);
-      if (errno != Errno.OK) return new ApiResult(errno);
-      else return new ApiResult(Errno.IDENTIFY_CODE_ERROR);
+      if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
+      else return new ApiResult(Errno.SMS_CODE_ERROR);
     }
 
     accountMapper.updatePasswordByPhone(accountName, encodePassword(password));
@@ -230,9 +229,9 @@ public class LoginManager {
     return ApiResult.notFound();
   }
 
-  public ApiResult login(String accountName, String password,
+  public ApiResult login(String accountName, String password, Optional<String> id,
                          Optional<String> idcode, HttpServletResponse response) {
-    int errno = checkPatchca(accountName, idcode);
+    int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
     if (errno != Errno.OK) return new ApiResult(errno);
     
     Account account;
@@ -244,7 +243,7 @@ public class LoginManager {
     
     if (account == null || !checkPassword(password, account.getPassword())) {
       errno = logLoginError(accountName);
-      if (errno != Errno.OK) return new ApiResult(errno);
+      if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
       return new ApiResult(account == null ? Errno.USER_NOT_FOUND : Errno.USER_PASSWORD_ERROR);
     }
 

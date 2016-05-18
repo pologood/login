@@ -11,6 +11,7 @@ import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import commons.spring.RedisRememberMeService;
 import commons.saas.LoginServiceProvider;
+import commons.utils.StringHelper;
 import ms.login.model.*;
 import ms.login.entity.*;
 import ms.login.manager.*;
@@ -30,7 +31,7 @@ public class LoginController {
   @ApiMethod(description = "get identifying code, id OR account required")
   @RequestMapping(value = "/idcode", method = RequestMethod.GET)
   public ResponseEntity<Void> getIdentifyingCode(HttpServletResponse response,
-    @ApiQueryParam(name = "id", description = "random alnum", format = "[a-zA-Z0-9]{32}")
+    @ApiQueryParam(name = "id", description = "random alnum", format = "[a-zA-Z0-9]{16}")
     @RequestParam(required = false) Optional<String> id,
     @ApiQueryParam(name = "account", description = "phone OR email")
     @RequestParam(required = false) Optional<String> account) throws IOException {
@@ -40,21 +41,28 @@ public class LoginController {
     byte[] img;
     if (account.isPresent()) {
       img = loginManager.getIdentifyingCode(account.get());
-    } else if (id.isPresent()) {
-      if (idCodePattern.matcher(id.get()).find()) {
-        img = loginManager.getIdentifyingCode(id.get());
-      } else {
-        os.write("id format error".getBytes());
-        return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-      }
     } else {
-      os.write("id or account is required".getBytes());
-      return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+      if (id.isPresent()) {
+        if (idCodePattern.matcher(id.get()).find()) {
+          img = loginManager.getIdentifyingCode(id.get());
+        } else {
+          os.write("id format error".getBytes());
+          return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+        }
+      } else {
+        id = Optional.of(StringHelper.random(16));
+        img = loginManager.getIdentifyingCode(id.get());
+      }
     }
 
     // HttpHeaders not work, have not figure out
     response.setContentType("image/png");
     response.setHeader("cache", "no-cache");
+
+    Cookie cookie = new Cookie("idcodetoken", account.orElse(id.get()));
+    cookie.setMaxAge(60);
+    response.addCookie(cookie);
+    
     os.write(img);
     return new ResponseEntity<Void>(HttpStatus.OK);
   }
@@ -96,16 +104,20 @@ public class LoginController {
     @ApiQueryParam(name = "regcode", description = "register code", required = false)
     @RequestParam Optional<String> regcode,
     @ApiQueryParam(name = "idcode", description = "when regcode wrong more than 3")
-    @RequestParam Optional<String> idcode,
+    @RequestParam(required = false) Optional<String> idcode,
+    @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
+    @RequestParam(required = false) Optional<String> id,
     @ApiQueryParam(name = "oldPassword", description = "old password", required = false)
     @RequestParam Optional<String> oldPassword,
     @ApiQueryParam(name = "password", description = "password")
     @RequestParam String password,
+    @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
     HttpServletResponse response) {
 
     if (regcode.isPresent()) {
       if (account.isPresent()) {
-        return loginManager.resetPassword(account.get(), password, regcode.get(), idcode);
+        if (!id.isPresent()) id = idc;
+        return loginManager.resetPassword(account.get(), password, regcode.get(), id, idcode);
       } else {
         return ApiResult.badRequest("account is required");
       }
@@ -175,8 +187,12 @@ public class LoginController {
     @RequestParam String password,
     @ApiQueryParam(name = "idcode", description = "when password wrong more than 3, need idcode")
     @RequestParam(required = false) Optional<String> idcode,
+    @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
+    @RequestParam(required = false) Optional<String> id,
+    @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
     HttpServletResponse response) {
-    return loginManager.login(account, password, idcode, response);
+    if (!id.isPresent()) id = idc;
+    return loginManager.login(account, password, id, idcode, response);
   }
 
   @ApiMethod(description = "xiaop oauth login")
