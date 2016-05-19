@@ -84,7 +84,8 @@ public class PermManager {
   }
 
   public ApiResult grantBoss(long uid, int incId) {
-    accountMapper.updateIncIdAndPerm(uid, incId, Account.BOSS);
+    int r = accountMapper.updateIncIdAndPerm(uid, incId, Account.BOSS);
+    if (r <= 0) return new ApiResult(Errno.GRANT_BOSS_ERROR);
     return ApiResult.ok();
   }
 

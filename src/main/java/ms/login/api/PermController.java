@@ -126,7 +126,7 @@ public class PermController {
     @PathVariable long uid,
     @ApiQueryParam(name = "incId", description = "corporation id")
     @RequestParam int incId) {
-    if (!Account.permGe(user.getPerm(), Account.PLAT_ADMIN)) return ApiResult.forbidden();
+    if (!user.isPlatformAdmin()) return ApiResult.forbidden();
     return permManager.grantBoss(uid, incId);
   }
 

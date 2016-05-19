@@ -19,8 +19,9 @@ public interface AccountMapper {
     final static String UPDATE_PASSWORD_BY_PHONE =
       "UPDATE " + TABLE + " SET password = #{password} WHERE phone = #{phone}";
 
-    final static String UPDATE_INCID_PERM =
-      "UPDATE " + TABLE + " SET incId = #{incId}, perm = #{perm} WHERE id = #{id}";
+    final static String UPDATE_INCID_PERM = "UPDATE " + TABLE +
+      " SET incId = #{incId}, perm = #{perm}" +
+      " WHERE id = #{id} AND incId < 0";
 
     public static String insert(Account account) {
       SQL sql = new SQL().INSERT_INTO(TABLE);

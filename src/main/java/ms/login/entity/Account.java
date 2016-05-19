@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties("password")
 public class Account {
   public static final long PLAT_BOSS  = 0;
+  public static final long PLAT_ROBOT = 1;
   public static final long PLAT_ADMIN = 10;
   public static final long BOSS       = 100;
   public static final long PERM_EXIST = 9_999;

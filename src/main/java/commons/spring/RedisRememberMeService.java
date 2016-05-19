@@ -157,6 +157,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public String toString() {
+      if (name.indexOf(':') != -1) name = name.replace(':', '_');
       return String.join(":", uid, token, name, createAt, incId, perms);
     }
 
@@ -304,7 +305,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
     if (queryString == null || !tokenPool.contains(queryString)) return null;
 
-    User user = new User("__", "__token");
+    User user = new User(0, "__", 0, Arrays.asList(1L));
     List<GrantedAuthority> grantedAuths = Arrays.asList(
       new SimpleGrantedAuthority("ROLE_SYSINTERNAL")
       );
