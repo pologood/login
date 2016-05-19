@@ -113,6 +113,7 @@ public class LoginManager {
     }
 
     if (name.isPresent()) account.setName(name.get());
+    account.setStatus(Account.Status.OK);
 
     try {
       account.setPassword(encodePassword(password));

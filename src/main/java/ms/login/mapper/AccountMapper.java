@@ -36,6 +36,7 @@ public interface AccountMapper {
       sql.VALUES("password", "#{password}");
       sql.VALUES("incId", "#{incId}");
       sql.VALUES("perm", "#{perm}");
+      sql.VALUES("status", "#{status}");
       return sql.toString();
     }
 
