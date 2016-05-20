@@ -40,7 +40,7 @@ public class RootConfig {
   @Bean
   public RedisRememberMeService rememberMeServices() {
     return new RedisRememberMeService(
-      jedisPool(),
+      jedisPool(), env.getProperty("rest.tokenpool", ""),
       env.getRequiredProperty("web.host"),
       86400 * 7);
   }
