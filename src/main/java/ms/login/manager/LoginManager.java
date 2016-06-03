@@ -23,6 +23,7 @@ public class LoginManager {
   @Autowired SmsService     smsService;
   @Autowired AccountMapper  accountMapper;
   @Autowired AccountPermMapper accountPermMapper;
+  @Autowired OpenAccountMapper openAccountMapper;
   @Autowired JedisPool      jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
   @Autowired LoginServiceProvider   loginServiceProvider;
@@ -177,16 +178,25 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
-  public Account getLocalAccount(String accountName) {
+  Account getLocalAccount(String accountName) {
     return isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
   }
 
-  public Account getLocalAccount(long uid) {
+  Account getLocalAccount(long uid) {
     return accountMapper.find(uid);      
   }
-    
-  public ApiResult getOpenAccount(String openId) {
+
+  String getOpenAccountName(String openId) {
+    LoginService service = loginServiceProvider.get(openId);
+    if (service != null) {
+      LoginService.User user = service.info(openId);
+      if (user != null) return user.getName();
+    }
+    return null;
+  }
+
+  ApiResult getOpenAccount(String openId) {
     LoginService service = loginServiceProvider.get(openId);
     if (service == null) return ApiResult.unAuthorized();
     LoginService.User user = service.info(openId);
@@ -230,8 +240,21 @@ public class LoginManager {
     return ApiResult.notFound();
   }
 
+  public List<Long> getPermIds(Account account) {
+    List<Long> permIds = null;
+
+    if (account.getPerm() != Long.MAX_VALUE) {
+      permIds = Arrays.asList(account.getPerm());
+    } else if (account.getPerm() == Account.PERM_EXIST) {
+      permIds = accountPermMapper.get(account.getId());
+    }
+
+    return permIds;
+  }
+
   public ApiResult login(String accountName, String password, Optional<String> id,
-                         Optional<String> idcode, HttpServletResponse response) {
+                         Optional<String> idcode, String openId,
+                         HttpServletResponse response) {
     int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
     if (errno != Errno.OK) return new ApiResult(errno);
     
@@ -248,15 +271,20 @@ public class LoginManager {
       return new ApiResult(account == null ? Errno.USER_NOT_FOUND : Errno.USER_PASSWORD_ERROR);
     }
 
-    List<Long> permIds = null;
-    if (account.getPerm() != Long.MAX_VALUE) {
-      permIds = Arrays.asList(account.getPerm());
-    } else if (account.getPerm() == Account.PERM_EXIST) {
-      permIds = accountPermMapper.get(account.getId());
+    String token;
+    if (openId != null) {
+      String name = getOpenAccountName(openId);
+      if (name == null) {
+        return ApiResult.badRequest("couldn't find openId's nickname");
+      }
+      openAccountMapper.bind(openId, account.getId());
+      token = rememberMeService.login(
+        response, new User(openId, name, account.getIncId(), getPermIds(account)));
+    } else {
+      token = rememberMeService.login(
+        response, new User(account.getId(), account.getName(),
+                           account.getIncId(), getPermIds(account)));
     }
-
-    String token = rememberMeService.login(
-      response, new User(account.getId(), account.getName(), account.getIncId(), permIds));
     
     return new ApiResult<String>(token);
   }
@@ -267,7 +295,22 @@ public class LoginManager {
     LoginService.User user = service.login(tmpToken);
     if (user == null) return ApiResult.unAuthorized();
 
-    String token = rememberMeService.login(response, new User(user.getOpenId(), user.getName()));
+    String token = null;
+
+    OpenAccount openAccount = openAccountMapper.findByOpenId(user.getOpenId());
+    if (openAccount != null) {
+      Account account = accountMapper.find(openAccount.getUid());
+      if (account != null) {
+        token = rememberMeService.login(
+          response, new User(user.getOpenId(), user.getName(),
+                             account.getIncId(), getPermIds(account)));
+      }
+    }
+
+    if (token == null) {
+      token = rememberMeService.login(response, new User(user.getOpenId(), user.getName()));
+    }
+
     return new ApiResult<String>(token);
   }
 

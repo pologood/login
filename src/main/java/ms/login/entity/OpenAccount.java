@@ -1,71 +1,30 @@
 package ms.login.entity;
 
-import java.time.LocalDateTime;
+import javax.validation.constraints.*;
 import org.jsondoc.core.annotation.*;
 
-@ApiObject(name = "OpenAccount", description = "Account based OpenId")
+@ApiObject(name = "OpenAccount", description = "OpenAccount")
 public class OpenAccount {
-  @ApiObjectField(description = "openid")
-  String   id;
+  @ApiObjectField(description = "openId")
+  @Size(max = 32)
+  String openId;
 
-  String accessToken;
-  LocalDateTime accessTokenExpireAt;
+  @ApiObjectField(description = "uid")
+  long uid = Long.MIN_VALUE;
 
-  String refreshToken;
-  LocalDateTime refreshTokenExpireAt;
-
-  @ApiObjectField(description = "nickname")
-  String name;
-
-  @ApiObjectField(description = "headimg")
-  String headImg;
-  
-  public void setId(String id) {
-    this.id = id;
+  public void setOpenId(String openId) {
+    this.openId = openId;
   }
-  public String getId() {
-    return this.id;
+  public String getOpenId() {
+    return this.openId;
   }
 
-  public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
+  public void setUid(long uid) {
+    this.uid = uid;
   }
-  public String getAccessToken() {
-    return this.accessToken;
-  }
-
-  public void setAccessTokenExpireAt(LocalDateTime dt) {
-    this.accessTokenExpireAt = dt;
-  }
-  public LocalDateTime getAccessTokenExpireAt() {
-    return this.accessTokenExpireAt;
+  public long getUid() {
+    return this.uid;
   }
 
-  public void setRefreshToken(String refreshToken) {
-    this.refreshToken = refreshToken;
-  }
-  public String getRefreshToken() {
-    return this.refreshToken;
-  }
-
-  public void setRefreshTokenExpireAt(LocalDateTime dt) {
-    this.refreshTokenExpireAt = dt;
-  }
-  public LocalDateTime getRefreshTokenExpireAt() {
-    return this.refreshTokenExpireAt;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
-  }
-  public String getName() {
-    return this.name;
-  }
-
-  public void setHeadImg(String headImg) {
-    this.headImg = headImg;
-  }
-  public String getHeadImg() {
-    return this.headImg;
-  }
 }
+

@@ -42,10 +42,14 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public User(String openId, String name) {
+      this(openId, name, Integer.MIN_VALUE, null);
+    }
+
+    public User(String openId, String name, int incId, List<Long> permIds) {
       this.openId   = Optional.of(openId);
       this.name     = name;
-      this.incId    = Integer.MIN_VALUE;
-      this.permIds  = null;
+      this.incId    = incId;
+      this.permIds  = permIds;
       this.internal = false;
     }
 

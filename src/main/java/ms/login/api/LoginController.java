@@ -190,9 +190,12 @@ public class LoginController {
     @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
     @RequestParam(required = false) Optional<String> id,
     @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
+    @ApiQueryParam(name = "openId", description = "login and binding to openid") 
+    @RequestParam Optional<String> openId,
     HttpServletResponse response) {
+    
     if (!id.isPresent()) id = idc;
-    return loginManager.login(account, password, id, idcode, response);
+    return loginManager.login(account, password, id, idcode, openId.orElse(null), response);
   }
 
   @ApiMethod(description = "xiaop oauth login")
