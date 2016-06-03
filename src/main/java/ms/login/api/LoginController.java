@@ -59,7 +59,7 @@ public class LoginController {
     response.setContentType("image/png");
     response.setHeader("cache", "no-cache");
 
-    Cookie cookie = new Cookie("idcodetoken", account.orElse(id.get()));
+    Cookie cookie = new Cookie("idcodetoken", account.isPresent() ? account.get() : id.get());
     cookie.setMaxAge(60);
     response.addCookie(cookie);
     
