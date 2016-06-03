@@ -7,13 +7,12 @@ import ms.login.entity.OpenAccount;
 
 public interface OpenAccountMapper {
   class Sql {
-    public static final String TABLE = "OpenAccount";
+    public static final String TABLE = "openAccount";
     static final String SELECT_BY_OPENID = "SELECT * FROM " + TABLE +
       " WHERE openId = #{openId}";
 
     static final String BIND = "INSERT INTO " + TABLE +
-      "(openId, uid) VALUES(#{openId}, #{uid}) ON DUPLICATE KEY UPDATE " +
-      " SET uid = #{uid} WHERE openId = #{openId}";
+      "(openId, uid) VALUES(#{openId}, #{uid}) ON DUPLICATE KEY UPDATE uid = #{uid}";
   }
 
   @Select(Sql.SELECT_BY_OPENID)
