@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 import commons.utils.*;
 import commons.saas.*;
@@ -27,6 +28,8 @@ public class LoginManager {
   @Autowired JedisPool              jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
   @Autowired LoginServiceProvider   loginServiceProvider;
+  @Autowired RestNameService        restNameService;
+  @Autowired RestTemplate           restTemplate;
 
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
   private String smsRegisterTemplate;
@@ -350,6 +353,12 @@ public class LoginManager {
     openAccount.setUid(uid);
     openAccount.setStatus(OpenAccount.Status.WAIT_AGREE);
     openAccountMapper.bind(openAccount);
+
+    // ignore result
+    restTemplate.postForObject(
+      restNameService.lookup("NOTICE"),
+      MapHelper.makeMulti("title", "apply", "channel", code, "uids", id),
+      ApiResult.class);
 
     return ApiResult.ok();
   }

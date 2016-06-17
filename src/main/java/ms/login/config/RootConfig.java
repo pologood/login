@@ -4,7 +4,8 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.JedisPool;
 import commons.saas.*;
 import commons.spring.*;
@@ -35,6 +36,20 @@ public class RootConfig {
       env.getRequiredProperty("sms.appkey"),
       jedisPool()
       );
+  }
+
+  @Bean
+  public RestNameService restNameService() {
+    return new RestNameService(env);
+  }
+
+  @Bean
+  public RestTemplate restTemplate() {
+    HttpComponentsClientHttpRequestFactory factory =
+      new HttpComponentsClientHttpRequestFactory();
+    factory.setConnectTimeout(Integer.parseInt(env.getProperty("rest.timeout.connect", "1000")));
+    factory.setReadTimeout(Integer.parseInt(env.getProperty("rest.timeout.read", "10000")));
+    return new RestTemplate(factory);
   }
 
   @Bean
