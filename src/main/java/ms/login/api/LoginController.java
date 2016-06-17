@@ -235,13 +235,14 @@ public class LoginController {
   }
 
   @ApiMethod(description = "get openId bind list")
-  @RequestMapping(value = "/user/openId")
+  @RequestMapping(value = "/user/openId", method = RequestMethod.GET)
   public ApiResult getBindOpenAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user) {
     return loginManager.listBindOpenAccount(user.getUid());
   }
 
   @ApiMethod(description = "apply openId bind")
+  @RequestMapping(value = "/user/openId", method = RequestMethod.PUT)
   public ApiResult applyBindOpenId(
     @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiQueryParam(name = "code", description = "invitaion code")
@@ -251,7 +252,7 @@ public class LoginController {
   
 
   @ApiMethod(description = "accept openId bind")
-  @RequestMapping(value = "/user/openId/{openId}")
+  @RequestMapping(value = "/user/openId/{openId}", method = RequestMethod.PUT)
   public ApiResult acceptBindOpenId(
     @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiPathParam(name = "openId", description = "the openId want to bind")
