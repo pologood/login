@@ -29,9 +29,9 @@ public class OpenAccount {
   }
 
   public OpenAccount(User user) {
-    this.openId = openId;
+    this.openId = user.getOpenId();
     this.nickname = user.getName();
-    this.headImg = headImg;
+    this.headImg = user.getHeadImg();
   }
 
   public void setOpenId(String openId) {
