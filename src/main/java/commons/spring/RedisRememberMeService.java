@@ -179,19 +179,21 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public User toUser() {
-      if (uid.indexOf('_') != -1) {
-        return new User(uid, name);
-      } else if (incId.isEmpty()) {
-        return new User(Long.parseLong(uid), name);
-      } else {
-        List<Long> permIds = null;
-        if (!perms.isEmpty()) {
+      int userIncId = Integer.MIN_VALUE;
+      List<Long> permIds = null;
+
+      if (!incId.isEmpty()) userIncId = Integer.parseInt(incId);
+      if (!perms.isEmpty()) {
           permIds = new ArrayList<>();
           for (String part : perms.split(",")) {
             permIds.add(Long.parseLong(part));
           }
-        }
-        return new User(Long.parseLong(uid), name, Integer.parseInt(incId), permIds);
+      }
+      
+      if (uid.indexOf('_') != -1) {
+        return new User(uid, name, userIncId, permIds);
+      } else {
+        return new User(Long.parseLong(uid), name, userIncId, permIds);
       }
     }
   }

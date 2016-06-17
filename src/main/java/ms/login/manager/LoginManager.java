@@ -19,12 +19,12 @@ import ms.login.mapper.*;
 
 @Component
 public class LoginManager {
-  @Autowired PatchcaService patchcaService;
-  @Autowired SmsService     smsService;
-  @Autowired AccountMapper  accountMapper;
-  @Autowired AccountPermMapper accountPermMapper;
-  @Autowired OpenAccountMapper openAccountMapper;
-  @Autowired JedisPool      jedisPool;
+  @Autowired PatchcaService         patchcaService;
+  @Autowired SmsService             smsService;
+  @Autowired AccountMapper          accountMapper;
+  @Autowired AccountPermMapper      accountPermMapper;
+  @Autowired OpenAccountMapper      openAccountMapper;
+  @Autowired JedisPool              jedisPool;
   @Autowired RedisRememberMeService rememberMeService;
   @Autowired LoginServiceProvider   loginServiceProvider;
 
@@ -187,11 +187,10 @@ public class LoginManager {
     return accountMapper.find(uid);      
   }
 
-  String getOpenAccountName(String openId) {
+  LoginService.User getOpenAccount(String openId) {
     LoginService service = loginServiceProvider.get(openId);
     if (service != null) {
-      LoginService.User user = service.info(openId);
-      if (user != null) return user.getName();
+      return service.info(openId);
     }
     return null;
   }
@@ -228,10 +227,16 @@ public class LoginManager {
     if (account == null) return ApiResult.notFound();
 
     if (token.isPresent()) {
-      String text = user.getId() + ":" + String.valueOf(account.getId());
-      if (token.get().equals(DigestHelper.hmacSHA1(tokenKey, text.getBytes()))) {
-        return new ApiResult<Account>(account);
+      boolean ok = false;
+      if (user.getIncId > 0) {
+        String text = user.getIncIdString() + ":" + String.valueOf(account.getId());
+        ok = token.get().equals(DigestHelper.hmacSHA1(tokenKey, text.getBytes()));
       }
+      if (!ok) {
+        String text = user.getId() + ":" + String.valueOf(account.getId());
+        ok = token.get().equals(DigestHelper.hmacSHA1(tokenKey, text.getBytes()));
+      }
+      if (ok) return new ApiResult<Account>(account);
     } else {
       if (account.getIncId() != Integer.MIN_VALUE && account.getIncId() == user.getIncId()) {
         return new ApiResult<Account>(account);
@@ -273,13 +278,18 @@ public class LoginManager {
 
     String token;
     if (openId != null) {
-      String name = getOpenAccountName(openId);
-      if (name == null) {
-        return ApiResult.badRequest("couldn't find openId's nickname");
+      LoginService.User user = getOpenAccount(openId);
+      if (user == null) {
+        return ApiResult.badRequest("invalid openId");
       }
-      openAccountMapper.bind(openId, account.getId());
+
+      OpenAccount openAccount = new OpenAccount(user);
+      openAccount.setUid(openId);
+      openAccount.setStatus(OpenAccount.Status.AGREE);
+      openAccountMapper.bind(openAccount);
+      
       token = rememberMeService.login(
-        response, new User(openId, name, account.getIncId(), getPermIds(account)));
+        response, new User(openId, openAccount.getName(), account.getIncId(), getPermIds(account)));
     } else {
       token = rememberMeService.login(
         response, new User(account.getId(), account.getName(),
@@ -316,6 +326,47 @@ public class LoginManager {
 
   public ApiResult logout(String id, HttpServletResponse response) {
     rememberMeService.logout(id, response);
+    return ApiResult.ok();
+  }
+
+  public ApiResult listBindOpenAccount(long uid) {
+    List<OpenAccount> accounts = openAccountMapper.findByUid(uid);
+    return new ApiResult<List>(accounts);
+  }
+
+  public ApiResult applyBindOpenId(String openId, String code) {
+    LoginService.User user = getOpenAccount(openId);
+    if (user == null) {
+      return ApiResult.badRequest("invalid openId");
+    }
+
+    String id = JedisHelper.get(jedisPool, code);
+    if (id == null) {
+      return ApiResult.badRequest("invalid code");
+    }
+    
+    long uid = Long.parseLong(id);
+    OpenAccount openAccount = new OpenAccount(user);
+    openAccount.setUid(uid);
+    openAccount.setStatus(OpenAccount.Status.WAIT_AGREE);
+    openAccountMapper.bind(openAccount);
+
+    return ApiResult.ok();
+  }
+
+  public ApiResult acceptBindOpenId(long uid, String openId) {
+    int r = openAccountMapper.accept(openId, uid, OpenAccount.Status.AGREE);
+    if (r == 0) return ApiResult.forbidden("apply first");
+
+    LoginService.User user = getOpenAccount(openId);
+    if (user == null) {
+      return ApiResult.badRequest("invalid openId");
+    }
+
+    Account account = accountMapper.findByUid(uid);
+    rememberMeService.update(
+      new User(openId, user.getName(), account.getIncId(), getPermIds(account)));
+
     return ApiResult.ok();
   }
 }

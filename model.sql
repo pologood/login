@@ -53,5 +53,9 @@ CREATE TABLE IF NOT EXISTS `address` (
 
 CREATE TABLE IF NOT EXISTS `openAccount` (
   `openId`    VARCHAR(64) PRIMARY KEY,
-  `uid`       BIGINT
+  `uid`       BIGINT,
+  `nickname`  VARCHAR(32),
+  `headImg`   VARCHAR(256),
+  `status`    TINYINT,
+  INDEX(`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

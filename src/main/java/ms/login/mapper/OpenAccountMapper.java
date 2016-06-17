@@ -11,14 +11,31 @@ public interface OpenAccountMapper {
     static final String SELECT_BY_OPENID = "SELECT * FROM " + TABLE +
       " WHERE openId = #{openId}";
 
+    static final String SELECT_BY_UID = "SELECT * FROM " + TABLE +
+      " WHERE uid = #{uid}";
+
     static final String BIND = "INSERT INTO " + TABLE +
-      "(openId, uid) VALUES(#{openId}, #{uid}) ON DUPLICATE KEY UPDATE uid = #{uid}";
+      "(openId, nickname, headImg, status, uid) " +
+      "VALUES(#{openId}, #{nickname}, #{headImg}, #{status}, #{uid}) " +
+      "ON DUPLICATE KEY UPDATE " +
+      "nickname = #{nickname}, headImg = #{headImg}, status = #{status}, uid = #{uid}";
+
+    static final String ACCEPT_BIND = "UPDATE " + TABLE +
+      " SET status = #{status} WHERE openId = #{openId} AND uid = #{uid}";
+      
   }
 
   @Select(Sql.SELECT_BY_OPENID)
   OpenAccount findByOpenId(String openId);
 
+  @Select(Sql.SELECT_BY_UID)
+  List<OpenAccount> findByUid(long uid);
+
   @Insert(Sql.BIND)
-  int bind(@Param("openId") String openId, @Param("uid") long uid);
+  int bind(OpenAccount account);
+
+  @Update(Sql.ACCEPT_BIND)
+  int accept(@Param("openId") String openId, @Param("uid") long uid,
+             @Param("status") OpenAccount.Status status);
 }
 

@@ -225,4 +225,35 @@ public class LoginController {
     HttpServletResponse response) {
     return loginManager.logout(user.getId(), response);
   }
+
+  @ApiMethod(description = "get openId bind invitaion code")
+  @RequestMapping(value = "/user/invitaionCode", method = RequestMethod.GET)
+  public ApiResult getInvitaionCode(@AuthenticationPrincipal User user) {
+    return permManager.getInvitationCode(user.getId());
+  }
+
+  @ApiMethod(description = "get openId bind list")
+  @RequestMapping(value = "/user/openId")
+  public ApiResult getBindOpenAccount(@AuthenticationPrincipal User user) {
+    return loginManager.listBindOpenAccount(user.getUid());
+  }
+
+  @ApiMethod(description = "apply openId bind")
+  public ApiResult applyBindOpenId(
+    @AuthenticationPrincipal User user,
+    @ApiQueryParam(name = "code", description = "invitaion code")
+    @RequestParam String code) {
+    return loginManager.applyBindOpenId(user.getId(), code);
+  }
+  
+
+  @ApiMethod(description = "accept openId bind")
+  @RequestMapping(value = "/user/openId/{openId}")
+  public ApiResult acceptBindOpenId(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "openId", description = "the openId want to bind")
+    @PathVariable String openId) {
+    return loginManager.acceptBindOpenId(user.getUid(), openId);
+  }
+  
 }

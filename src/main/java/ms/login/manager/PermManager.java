@@ -89,19 +89,14 @@ public class PermManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getInvitationCode(int incId) {
-    String inc = String.valueOf(incId);
-    String code = StringHelper.random(32);
+  public ApiResult getInvitationCode(String id) {
+    String code = StringHelper.random(32);    
+    JedisHelper.setex(jedisPool, code, 86400, id);
 
-    try (Jedis c = jedisPool.getResource()) {
-      c.setex(code, 86400, inc);
-    }
-
-    String url = "/inc/user?incId=" + inc + "&code=" + code;
-    return new ApiResult<String>(url);
+    return new ApiResult<String>(code);
   }
 
-  public ApiResult joinInc(long uid, int incId, String code) {
+      public ApiResult joinInc(long uid, int incId, String code) {
     String inc = null;
     try (Jedis c = jedisPool.getResource()) {
       inc = c.get(code);
