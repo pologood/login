@@ -134,7 +134,7 @@ public class PermController {
   @RequestMapping(value = "/inc/user/invitaionCode", method = RequestMethod.GET)
   public ApiResult getInvitationCode(@AuthenticationPrincipal User user) {
     if (user.getPerm() != Account.BOSS) return ApiResult.forbidden();
-    return permManager.getInvitationCode(user.getIncId());
+    return permManager.getInvitationCode(user.getIncIdString());
   }
 
   @ApiMethod(description = "Invite uid Join Corporation")

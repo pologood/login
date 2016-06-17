@@ -25,6 +25,7 @@ import ms.login.manager.*;
 @RequestMapping("/api")
 public class LoginController {
   @Autowired LoginManager loginManager;
+  @Autowired PermManager  permManager;
 
   static Pattern idCodePattern = Pattern.compile("^[a-zA-Z0-9]{16}$");
 
@@ -228,19 +229,21 @@ public class LoginController {
 
   @ApiMethod(description = "get openId bind invitaion code")
   @RequestMapping(value = "/user/invitaionCode", method = RequestMethod.GET)
-  public ApiResult getInvitaionCode(@AuthenticationPrincipal User user) {
+  public ApiResult getInvitaionCode(
+    @AuthenticationPrincipal RedisRememberMeService.User user) {
     return permManager.getInvitationCode(user.getId());
   }
 
   @ApiMethod(description = "get openId bind list")
   @RequestMapping(value = "/user/openId")
-  public ApiResult getBindOpenAccount(@AuthenticationPrincipal User user) {
+  public ApiResult getBindOpenAccount(
+    @AuthenticationPrincipal RedisRememberMeService.User user) {
     return loginManager.listBindOpenAccount(user.getUid());
   }
 
   @ApiMethod(description = "apply openId bind")
   public ApiResult applyBindOpenId(
-    @AuthenticationPrincipal User user,
+    @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiQueryParam(name = "code", description = "invitaion code")
     @RequestParam String code) {
     return loginManager.applyBindOpenId(user.getId(), code);
@@ -250,7 +253,7 @@ public class LoginController {
   @ApiMethod(description = "accept openId bind")
   @RequestMapping(value = "/user/openId/{openId}")
   public ApiResult acceptBindOpenId(
-    @AuthenticationPrincipal User user,
+    @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiPathParam(name = "openId", description = "the openId want to bind")
     @PathVariable String openId) {
     return loginManager.acceptBindOpenId(user.getUid(), openId);

@@ -187,7 +187,7 @@ public class LoginManager {
     return accountMapper.find(uid);      
   }
 
-  LoginService.User getOpenAccount(String openId) {
+  LoginService.User getOpenAccountImpl(String openId) {
     LoginService service = loginServiceProvider.get(openId);
     if (service != null) {
       return service.info(openId);
@@ -228,7 +228,7 @@ public class LoginManager {
 
     if (token.isPresent()) {
       boolean ok = false;
-      if (user.getIncId > 0) {
+      if (user.getIncId() > 0) {
         String text = user.getIncIdString() + ":" + String.valueOf(account.getId());
         ok = token.get().equals(DigestHelper.hmacSHA1(tokenKey, text.getBytes()));
       }
@@ -278,18 +278,18 @@ public class LoginManager {
 
     String token;
     if (openId != null) {
-      LoginService.User user = getOpenAccount(openId);
+      LoginService.User user = getOpenAccountImpl(openId);
       if (user == null) {
         return ApiResult.badRequest("invalid openId");
       }
 
       OpenAccount openAccount = new OpenAccount(user);
-      openAccount.setUid(openId);
+      openAccount.setUid(account.getId());
       openAccount.setStatus(OpenAccount.Status.AGREE);
       openAccountMapper.bind(openAccount);
       
       token = rememberMeService.login(
-        response, new User(openId, openAccount.getName(), account.getIncId(), getPermIds(account)));
+        response, new User(openId, user.getName(), account.getIncId(), getPermIds(account)));
     } else {
       token = rememberMeService.login(
         response, new User(account.getId(), account.getName(),
@@ -335,7 +335,7 @@ public class LoginManager {
   }
 
   public ApiResult applyBindOpenId(String openId, String code) {
-    LoginService.User user = getOpenAccount(openId);
+    LoginService.User user = getOpenAccountImpl(openId);
     if (user == null) {
       return ApiResult.badRequest("invalid openId");
     }
@@ -356,14 +356,14 @@ public class LoginManager {
 
   public ApiResult acceptBindOpenId(long uid, String openId) {
     int r = openAccountMapper.accept(openId, uid, OpenAccount.Status.AGREE);
-    if (r == 0) return ApiResult.forbidden("apply first");
+    if (r == 0) return ApiResult.badRequest("apply first");
 
-    LoginService.User user = getOpenAccount(openId);
+    LoginService.User user = getOpenAccountImpl(openId);
     if (user == null) {
       return ApiResult.badRequest("invalid openId");
     }
 
-    Account account = accountMapper.findByUid(uid);
+    Account account = accountMapper.find(uid);
     rememberMeService.update(
       new User(openId, user.getName(), account.getIncId(), getPermIds(account)));
 

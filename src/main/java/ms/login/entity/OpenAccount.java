@@ -21,6 +21,10 @@ public class OpenAccount {
   @ApiObjectField(description = "uid")
   long uid = Long.MIN_VALUE;
 
+  String nickname;
+  String headImg;
+  Status status;
+
   public OpenAccount() {
   }
 
