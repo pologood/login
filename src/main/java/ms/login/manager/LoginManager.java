@@ -243,6 +243,8 @@ public class LoginManager {
     } else {
       if (account.getIncId() != Integer.MIN_VALUE && account.getIncId() == user.getIncId()) {
         return new ApiResult<Account>(account);
+      } else if (user.isInternal()) {
+        return new ApiResult<Account>(account);
       }
     }
     return ApiResult.notFound();
