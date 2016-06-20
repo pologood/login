@@ -31,10 +31,11 @@ CREATE TABLE IF NOT EXISTS `incPerm`  (
 ) ENGINE=InnoDB AUTO_INCREMENT=10000000 DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `permission`  (
-  `uid`      BIGINT KEY,
+  `uid`      BIGINT,
   `incId`    INT(11),
   `permId`   BIGINT,
-  `grant`    TINYINT(4)
+  `grant`    TINYINT(4),
+  INDEX(`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `address` (

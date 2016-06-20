@@ -132,21 +132,21 @@ public class PermController {
 
   @ApiMethod(description = "get invitation code")
   @RequestMapping(value = "/inc/user/invitaionCode", method = RequestMethod.GET)
-  public ApiResult getInvitationCode(@AuthenticationPrincipal User user) {
+  public ApiResult getInvitationCode(
+    @AuthenticationPrincipal User user,
+    @ApiQueryParam(name = "account", description = "invitation account, phone or email")
+    @RequestParam String account) {
     if (user.getPerm() != Account.BOSS) return ApiResult.forbidden();
-    return permManager.getInvitationCode(user.getIncIdString());
+    return permManager.getInvitationCode(user.getIncIdString(), account);
   }
 
   @ApiMethod(description = "Invite uid Join Corporation")
-  @RequestMapping(value = "/inc/user", method = RequestMethod.GET)
+  @RequestMapping(value = "/inc/user", method = RequestMethod.PUT)
   public ApiResult joinInc(
     @AuthenticationPrincipal User user,
-    @ApiQueryParam(name = "incId", description = "corporation id")
-    @RequestParam int incId,
     @ApiQueryParam(name = "code", description = "invitation code")
     @RequestParam String code) {
-    if (Account.permGe(user.getPerm(), Account.BOSS)) return ApiResult.ok();
-    return permManager.joinInc(user.getUid(), incId, code);
+    return permManager.joinInc(user.getUid(), code);
   }
 
   @ApiMethod(description = "Grant permission")
@@ -157,7 +157,7 @@ public class PermController {
     @PathVariable long uid,
     @ApiQueryParam(name = "permIds", description = "permission list")
     @RequestParam List<Long> permIds,
-    @ApiQueryParam(name = "grantOptions", description = "grant option", format = "Y|N")
+    @ApiQueryParam(name = "grantOptions", description = "grant option", format = "true|false")
     @RequestParam(required = false) List<Boolean> grantOptions) {
     if (grantOptions != null && permIds.size() != grantOptions.size())
       return ApiResult.badRequest("grantOptions must match permIds");
@@ -178,6 +178,6 @@ public class PermController {
     @RequestParam List<Long> permIds) {
     if (user.getPerm() != Account.BOSS) return ApiResult.forbidden();
     
-    return permManager.revokePerm(uid, permIds);    
+    return permManager.revokePerm(uid, user.getIncId(), permIds);    
   }
 }

@@ -182,12 +182,16 @@ public class LoginManager {
   }
 
   Account getLocalAccount(String accountName) {
-    return isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+    Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
+    if (account != null) account.setGrantPerms(getPermIds(account));
+    return account;
   }
 
   Account getLocalAccount(long uid) {
-    return accountMapper.find(uid);      
+    Account account = accountMapper.find(uid);
+    if (account != null) account.setGrantPerms(getPermIds(account));
+    return account;
   }
 
   LoginService.User getOpenAccountImpl(String openId) {
@@ -253,10 +257,10 @@ public class LoginManager {
   public List<Long> getPermIds(Account account) {
     List<Long> permIds = null;
 
-    if (account.getPerm() != Long.MAX_VALUE) {
-      permIds = Arrays.asList(account.getPerm());
-    } else if (account.getPerm() == Account.PERM_EXIST) {
+    if (account.getPerm() == Account.PERM_EXIST) {
       permIds = accountPermMapper.get(account.getId());
+    } else if (account.getPerm() != Long.MAX_VALUE) {
+      permIds = Arrays.asList(account.getPerm());
     }
 
     return permIds;

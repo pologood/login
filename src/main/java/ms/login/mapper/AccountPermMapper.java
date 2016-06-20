@@ -15,16 +15,8 @@ public interface AccountPermMapper {
       " WHERE uid = #{uid} AND permId = #{permId}";
     static final String DELETE_ALL = "DELETE FROM " + TABLE + " WHERE uid = #{uid}";
 
-    public static String insert(List<AccountPerm> perms) {
-      StringBuilder builder = new StringBuilder();
-      builder.append("INSERT INTO ").append(TABLE).append("VALUES");
-      int i = 0;
-      for (AccountPerm perm : perms) {
-        if (i++ != 0) builder.append(",");
-        builder.append("(#{uid}, #{incId}, #{permId}, #{grant})");
-      }
-      return builder.toString();
-    }
+    static final String INSERT = "INSERT INTO " + TABLE +
+      " VALUES(#{uid}, #{incId}, #{permId}, #{grant})";
   }
 
   @Select(Sql.SELECT)
@@ -33,11 +25,11 @@ public interface AccountPermMapper {
   @Select(Sql.SELECT_PERM)
   List<Long> get(long uid);
 
-  @InsertProvider(type = Sql.class, method = "insert")
-  int add(List<AccountPerm> perms);
+  @Insert(Sql.INSERT)
+  int add(AccountPerm perms);
 
   @Delete(Sql.DELETE)
-  int delete(@Param("uid") long uid, @Param("permId") long permId);
+  int delete(@Param("uid") long uid, @Param("incId") int incId, @Param("permId") long permId);
 
   @Delete(Sql.DELETE_ALL)
   int deleteAll(long uid);

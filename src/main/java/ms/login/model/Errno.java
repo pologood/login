@@ -21,6 +21,7 @@ public class Errno {
   public static final int EXPIRED_INVATATION_CODE = 1103;
   public static final int INVALID_INVATATION_CODE = 1104;
   public static final int GRANT_BOSS_ERROR        = 1105;
+  public static final int INC_EXISTS              = 1106;
 
   public static String getMessage(int code) {
     switch (code) {
@@ -42,6 +43,7 @@ public class Errno {
     case EXPIRED_INVATATION_CODE: return "invatation code expired";
     case INVALID_INVATATION_CODE: return "invalid invatation";
     case GRANT_BOSS_ERROR: return "uid not found or is in inc.";
+    case INC_EXISTS: return "uid can only be belong to one inc.";
     default: return "";
     }
   }

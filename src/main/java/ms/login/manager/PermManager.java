@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.http.*;
 import commons.utils.*;
+import commons.spring.RedisRememberMeService;
 import static commons.spring.RedisRememberMeService.User;
 import ms.login.model.*;
 import ms.login.entity.*;
@@ -13,11 +14,12 @@ import ms.login.mapper.*;
 
 @Component
 public class PermManager {
-  @Autowired AccountMapper     accountMapper;
-  @Autowired SysPermMapper     sysPermMapper;
-  @Autowired IncPermMapper     incPermMapper;
-  @Autowired AccountPermMapper accountPermMapper;
-  @Autowired JedisPool         jedisPool;
+  @Autowired AccountMapper          accountMapper;
+  @Autowired SysPermMapper          sysPermMapper;
+  @Autowired IncPermMapper          incPermMapper;
+  @Autowired AccountPermMapper      accountPermMapper;
+  @Autowired RedisRememberMeService rememberMeService;  
+  @Autowired JedisPool              jedisPool;
 
   public ApiResult getSysPerm() {
     List<SysPerm> perms = sysPermMapper.getAll();
@@ -89,22 +91,39 @@ public class PermManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getInvitationCode(String id) {
-    String code = StringHelper.random(32);    
-    JedisHelper.setex(jedisPool, code, 86400, id);
+  public ApiResult getInvitationCode(String id, String account) {
+    String code = StringHelper.random(32);
+    String value = account == null ? id : id + ":" + account;
+    JedisHelper.setex(jedisPool, code, 86400, value);
 
     return new ApiResult<String>(code);
   }
 
-      public ApiResult joinInc(long uid, int incId, String code) {
-    String inc = null;
-    try (Jedis c = jedisPool.getResource()) {
-      inc = c.get(code);
+  void updateRememberMe(long uid, List<Long> perms) {
+    Account account = accountMapper.find(uid);
+    rememberMeService.update(
+      new User(uid, account.getName(), account.getIncId(), perms));
+  }
+
+  public ApiResult joinInc(long uid, String code) {
+    String value = JedisHelper.get(jedisPool, code);
+    if (value == null) return new ApiResult(Errno.EXPIRED_INVATATION_CODE);
+
+    String parts[] = value.split(":", 2);
+    if (parts.length != 2) return new ApiResult(Errno.INVALID_INVATATION_CODE);
+
+    Account account = accountMapper.find(uid);
+    if (!parts[1].equals(account.getPhone()) && !parts[1].equals(account.getEmail())) {
+      return new ApiResult(Errno.INVALID_INVATATION_CODE);
     }
-    if (inc == null) return new ApiResult(Errno.EXPIRED_INVATATION_CODE);
-    if (!inc.equals(String.valueOf(incId))) return new ApiResult(Errno.INVALID_INVATATION_CODE);
+
+    int incId = Integer.parseInt(parts[0]);
+    if (account.getIncId() >= 0 && account.getIncId() != incId) {
+      return new ApiResult(Errno.INC_EXISTS);
+    }
 
     accountMapper.updateIncIdAndPerm(uid, incId, Account.PERM_EXIST);
+    updateRememberMe(uid, null);
     return ApiResult.ok();
   }
 
@@ -120,7 +139,6 @@ public class PermManager {
       }
     }
 
-    List<AccountPerm> perms = new ArrayList<>();
     for (int i = 0; i < permIds.size(); ++i) {
       AccountPerm perm = new AccountPerm();
       perm.setUid(uid);
@@ -128,18 +146,19 @@ public class PermManager {
       perm.setPermId(permIds.get(i));
       perm.setGrant(options.get(i));
 
-      perms.add(perm);
+      accountPermMapper.add(perm);
     }
 
-    accountPermMapper.add(perms);
+    updateRememberMe(uid, accountPermMapper.get(uid));
     return ApiResult.ok();
   }
   
-  public ApiResult revokePerm(long uid, List<Long> permIds) {
+  public ApiResult revokePerm(long uid, int incId, List<Long> permIds) {
     for (long permId : permIds) {
-      accountPermMapper.delete(uid, permId);
+      accountPermMapper.delete(uid, incId, permId);
     }
     
+    updateRememberMe(uid, accountPermMapper.get(uid));
     return ApiResult.ok();
   }
 }

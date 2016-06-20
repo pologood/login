@@ -1,5 +1,6 @@
 package ms.login.entity;
 
+import java.util.List;
 import org.jsondoc.core.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -51,6 +52,9 @@ public class Account {
 
   @ApiObjectField(description = "perm")
   long perm = Long.MAX_VALUE;
+
+  @ApiObjectField(description = "grantPerms")
+  List<Long> grantPerms;
 
   public void setId(long id) {
     this.id = id;
@@ -120,5 +124,12 @@ public class Account {
   }
   public static boolean permGe(long a, long b) {
     return a <= b;
-  }  
+  }
+
+  public void setGrantPerms(List<Long> grantPerms) {
+    this.grantPerms = grantPerms;
+  }
+  public List<Long> getGrantPerms() {
+    return this.grantPerms;
+  }
 }
