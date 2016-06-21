@@ -274,7 +274,7 @@ public class LoginManager {
     
     Account account;
     if (isEmail(accountName)) {
-      account = null;
+      account = accountMapper.findByEmail(accountName);
     } else {
       account = accountMapper.findByPhone(accountName);
     }
