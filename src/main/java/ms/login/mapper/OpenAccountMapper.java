@@ -22,6 +22,9 @@ public interface OpenAccountMapper {
 
     static final String ACCEPT_BIND = "UPDATE " + TABLE +
       " SET status = #{status} WHERE openId = #{openId} AND uid = #{uid}";
+
+    static final String DELETE = "DELETE FROM " + TABLE +
+      " WHERE openId = #{openId} AND uid = #{uid}";
       
   }
 
@@ -37,5 +40,8 @@ public interface OpenAccountMapper {
   @Update(Sql.ACCEPT_BIND)
   int accept(@Param("openId") String openId, @Param("uid") long uid,
              @Param("status") OpenAccount.Status status);
+
+  @Delete(Sql.DELETE)
+  int delete(@Param("openId") String openId, @Param("uid") long uid);
 }
 

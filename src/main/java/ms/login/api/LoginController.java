@@ -259,5 +259,14 @@ public class LoginController {
     @PathVariable String openId) {
     return loginManager.acceptBindOpenId(user.getUid(), openId);
   }
+
+  @ApiMethod(description = "unbind openId")
+  @RequestMapping(value = "/user/openId/{openId}", method = RequestMethod.DELETE)
+  public ApiResult unbindOpenId(
+    @AuthenticationPrincipal RedisRememberMeService.User user,
+    @ApiPathParam(name = "openId", description = "the openId want to bind")
+    @PathVariable String openId) {
+    return loginManager.unbindOpenId(user.getUid(), openId);
+  } 
   
 }

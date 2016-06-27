@@ -384,4 +384,17 @@ public class LoginManager {
 
     return ApiResult.ok();
   }
+
+  public ApiResult unbindOpenId(long uid, String openId) {
+    int r = openAccountMapper.delete(openId, uid);
+    if (r == 0) return ApiResult.ok();
+
+    LoginService.User user = getOpenAccountImpl(openId);
+    if (user == null) {
+      return ApiResult.badRequest("invalid openId");
+    }
+
+    rememberMeService.update(new User(openId, user.getName()));
+    return ApiResult.ok();    
+  }
 }
