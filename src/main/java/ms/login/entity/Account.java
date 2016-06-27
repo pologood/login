@@ -18,6 +18,9 @@ public class Account {
   public static final long PERM_GROUP_MIN = 1_000_000;
   public static final long PERM_GROUP_MAX = 9_999_999;
   public static final long INC_PERM_MIN   = 10_000_000;
+
+  public static final int  INC_NOTEXIST = Integer.MIN_VALUE;
+  public static final long PERM_NOTEXIST = Long.MAX_VALUE;
   
   public static enum Status {
     OK(1);

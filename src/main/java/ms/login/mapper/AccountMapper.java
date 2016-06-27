@@ -19,9 +19,12 @@ public interface AccountMapper {
     final static String UPDATE_PASSWORD_BY_PHONE =
       "UPDATE " + TABLE + " SET password = #{password} WHERE phone = #{phone}";
 
-    final static String UPDATE_INCID_PERM = "UPDATE " + TABLE +
+    final static String GRANT_INCID_PERM = "UPDATE " + TABLE +
       " SET incId = #{incId}, perm = #{perm}" +
       " WHERE id = #{id} AND incId < 0";
+
+    final static String REVOKE_INCID_PERM = "UPDATE " + TABLE +
+      " SET incId = #{incId}, perm = #{perm} WHERE id = #{id}";
 
     public static String insert(Account account) {
       SQL sql = new SQL().INSERT_INTO(TABLE);
@@ -78,7 +81,11 @@ public interface AccountMapper {
   @Update(Sql.UPDATE_PASSWORD_BY_PHONE)
   int updatePasswordByPhone(@Param("phone") String phone, @Param("password") String password);
 
-  @Update(Sql.UPDATE_INCID_PERM)
+  @Update(Sql.GRANT_INCID_PERM)
   int updateIncIdAndPerm(@Param("id") long id, @Param("incId") int incId,
+                         @Param("perm") long perm);
+
+  @Update(Sql.REVOKE_INCID_PERM)
+  int revokeIncIdAndPerm(@Param("id") long id, @Param("incId") int incId,
                          @Param("perm") long perm);
 }

@@ -105,6 +105,25 @@ public class PermManager {
       new User(uid, account.getName(), account.getIncId(), perms));
   }
 
+  public ApiResult getIncMember(int incId) {
+    List<AccountPerm> perms = accountPermMapper.getByIncId(incId);
+    Map<Long, Account> map = new HashMap<>();
+    for (AccountPerm perm : perms) {
+      Account account = map.get(perm.getUid());
+      if (account == null) {
+        account = accountMapper.find(perm.getUid());
+        if (account != null) {
+          account.setGrantPerms(new ArrayList(Arrays.asList(perm.getPermId())));
+          map.put(perm.getUid(), account);
+        }
+      } else {
+        account.getGrantPerms().add(perm.getPermId());
+      }
+    }
+
+    return new ApiResult<Collection>(map.values());
+  }
+
   public ApiResult joinInc(long uid, String code) {
     String value = JedisHelper.get(jedisPool, code);
     if (value == null) return new ApiResult(Errno.EXPIRED_INVATATION_CODE);
@@ -124,6 +143,12 @@ public class PermManager {
 
     accountMapper.updateIncIdAndPerm(uid, incId, Account.PERM_EXIST);
     updateRememberMe(uid, null);
+    return ApiResult.ok();
+  }
+
+  public ApiResult deleteFromInc(int incId, long uid) {
+    accountPermMapper.deleteAll(uid, incId);
+    accountMapper.revokeIncIdAndPerm(uid, Account.INC_NOTEXIST, Account.PERM_NOTEXIST);
     return ApiResult.ok();
   }
 

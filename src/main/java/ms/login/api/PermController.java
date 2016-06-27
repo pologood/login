@@ -140,6 +140,13 @@ public class PermController {
     return permManager.getInvitationCode(user.getIncIdString(), account);
   }
 
+  @ApiMethod(description = "get inc member")
+  @RequestMapping(value = "/inc/user", method = RequestMethod.GET)
+  public ApiResult getIncMember(@AuthenticationPrincipal User user) {
+    return permManager.getIncMember(user.getIncId());
+  }
+  
+
   @ApiMethod(description = "Invite uid Join Corporation")
   @RequestMapping(value = "/inc/user", method = RequestMethod.PUT)
   public ApiResult joinInc(
@@ -147,6 +154,17 @@ public class PermController {
     @ApiQueryParam(name = "code", description = "invitation code")
     @RequestParam String code) {
     return permManager.joinInc(user.getUid(), code);
+  }
+
+  @ApiMethod(description = "delete user from inc")
+  @RequestMapping(value = "/inc/user/{uid}", method = RequestMethod.DELETE)
+  public ApiResult deleteFromInc(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "uid", description = "user id")
+    @PathVariable long uid) {
+    
+    if (!user.isBoss()) return ApiResult.forbidden();
+    return permManager.deleteFromInc(user.getIncId(), uid);
   }
 
   @ApiMethod(description = "Grant permission")

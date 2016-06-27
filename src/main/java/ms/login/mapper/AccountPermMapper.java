@@ -10,6 +10,8 @@ public interface AccountPermMapper {
     static final String TABLE  = "permission";
     static final String SELECT = "SELECT * FROM " + TABLE + " WHERE uid = #{uid}";
     static final String SELECT_PERM = "SELECT permId FROM " + TABLE + " WHERE uid = #{uid}";
+
+    static final String SELECT_ACCOUNT = "SELECT * FROM " + TABLE + " WHERE incId = #{incId}";
       
     static final String DELETE = "DELETE FROM " + TABLE +
       " WHERE uid = #{uid} AND permId = #{permId}";
@@ -22,6 +24,9 @@ public interface AccountPermMapper {
   @Select(Sql.SELECT)
   List<AccountPerm> getAll(long uid);
 
+  @Select(Sql.SELECT_ACCOUNT)
+  List<AccountPerm> getByIncId(int incId);
+
   @Select(Sql.SELECT_PERM)
   List<Long> get(long uid);
 
@@ -32,5 +37,5 @@ public interface AccountPermMapper {
   int delete(@Param("uid") long uid, @Param("incId") int incId, @Param("permId") long permId);
 
   @Delete(Sql.DELETE_ALL)
-  int deleteAll(long uid);
+  int deleteAll(@Param("uid") long uid, @Param("incId") int incId);
 }
