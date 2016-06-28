@@ -91,13 +91,17 @@ public class PermManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getInvitationCode(String id, List<String> accounts) {
+  public ApiResult getInvitationCode(String id) {
+    return getInvitationCode(id, null, -1);
+  }
+
+  public ApiResult getInvitationCode(String id, List<String> accounts, long permId) {
     String code = StringHelper.random(32);
     if (accounts == null || accounts.isEmpty()) {
       JedisHelper.setex(jedisPool, code, 86400, id);
     } else {
       for (String account : accounts) {
-        String value = id + ":" + account;
+        String value = id + ":" + account + ":" + permId;
         JedisHelper.setex(jedisPool, code, 86400, value);
       }
     }
@@ -134,8 +138,8 @@ public class PermManager {
     String value = JedisHelper.get(jedisPool, code);
     if (value == null) return new ApiResult(Errno.EXPIRED_INVATATION_CODE);
 
-    String parts[] = value.split(":", 2);
-    if (parts.length != 2) return new ApiResult(Errno.INVALID_INVATATION_CODE);
+    String parts[] = value.split(":", 3);
+    if (parts.length != 3) return new ApiResult(Errno.INVALID_INVATATION_CODE);
 
     Account account = accountMapper.find(uid);
     if (!parts[1].equals(account.getPhone()) && !parts[1].equals(account.getEmail())) {
@@ -146,9 +150,16 @@ public class PermManager {
     if (account.getIncId() >= 0 && account.getIncId() != incId) {
       return new ApiResult(Errno.INC_EXISTS);
     }
-
     accountMapper.updateIncIdAndPerm(uid, incId, Account.PERM_EXIST);
-    updateRememberMe(uid, null);
+
+    long permId = Long.parseLong(parts[2]);
+    if (permId != -1) {
+      grantPermImpl(uid, incId, permId, false);
+      updateRememberMe(uid, Arrays.asList(permId));      
+    } else {
+      updateRememberMe(uid, null);
+    }
+
     return ApiResult.ok();
   }
 
@@ -156,6 +167,16 @@ public class PermManager {
     accountPermMapper.deleteAll(uid, incId);
     accountMapper.revokeIncIdAndPerm(uid, Account.INC_NOTEXIST, Account.PERM_NOTEXIST);
     return ApiResult.ok();
+  }
+
+  public void grantPermImpl(long uid, int incId, long permId, boolean option) {
+    AccountPerm perm = new AccountPerm();
+    perm.setUid(uid);
+    perm.setIncId(incId);
+    perm.setPermId(permId);
+    perm.setGrant(option);
+
+    accountPermMapper.add(perm);
   }
 
   public ApiResult grantPerm(User user, long uid, List<Long> permIds, List<Boolean> options) {
@@ -171,13 +192,7 @@ public class PermManager {
     }
 
     for (int i = 0; i < permIds.size(); ++i) {
-      AccountPerm perm = new AccountPerm();
-      perm.setUid(uid);
-      perm.setIncId(user.getIncId());
-      perm.setPermId(permIds.get(i));
-      perm.setGrant(options.get(i));
-
-      accountPermMapper.add(perm);
+      grantPermImpl(uid, user.getIncId(), permIds.get(i), options.get(i));
     }
 
     updateRememberMe(uid, accountPermMapper.get(uid));

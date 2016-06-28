@@ -231,7 +231,7 @@ public class LoginController {
   @RequestMapping(value = "/user/invitaionCode", method = RequestMethod.GET)
   public ApiResult getInvitaionCode(
     @AuthenticationPrincipal RedisRememberMeService.User user) {
-    return permManager.getInvitationCode(user.getId(), null);
+    return permManager.getInvitationCode(user.getId());
   }
 
   @ApiMethod(description = "get openId bind list")
