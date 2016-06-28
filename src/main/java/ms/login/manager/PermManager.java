@@ -91,10 +91,16 @@ public class PermManager {
     return ApiResult.ok();
   }
 
-  public ApiResult getInvitationCode(String id, String account) {
+  public ApiResult getInvitationCode(String id, List<String> accounts) {
     String code = StringHelper.random(32);
-    String value = account == null ? id : id + ":" + account;
-    JedisHelper.setex(jedisPool, code, 86400, value);
+    if (accounts == null || accounts.isEmpty()) {
+      JedisHelper.setex(jedisPool, code, 86400, id);
+    } else {
+      for (String account : accounts) {
+        String value = id + ":" + account;
+        JedisHelper.setex(jedisPool, code, 86400, value);
+      }
+    }
 
     return new ApiResult<String>(code);
   }
@@ -113,7 +119,7 @@ public class PermManager {
       if (account == null) {
         account = accountMapper.find(perm.getUid());
         if (account != null) {
-          account.setGrantPerms(new ArrayList(Arrays.asList(perm.getPermId())));
+          account.setGrantPerms(new ArrayList<Long>(Arrays.asList(perm.getPermId())));
           map.put(perm.getUid(), account);
         }
       } else {

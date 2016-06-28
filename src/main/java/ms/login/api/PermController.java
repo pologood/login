@@ -135,7 +135,7 @@ public class PermController {
   public ApiResult getInvitationCode(
     @AuthenticationPrincipal User user,
     @ApiQueryParam(name = "account", description = "invitation account, phone or email")
-    @RequestParam String account) {
+    @RequestParam List<String> account) {
     if (user.getPerm() != Account.BOSS) return ApiResult.forbidden();
     return permManager.getInvitationCode(user.getIncIdString(), account);
   }
