@@ -166,6 +166,7 @@ public class PermManager {
   public ApiResult deleteFromInc(int incId, long uid) {
     accountPermMapper.deleteAll(uid, incId);
     accountMapper.revokeIncIdAndPerm(uid, Account.INC_NOTEXIST, Account.PERM_NOTEXIST);
+    updateRememberMe(uid, null);
     return ApiResult.ok();
   }
 
