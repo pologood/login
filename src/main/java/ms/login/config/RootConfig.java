@@ -30,6 +30,16 @@ public class RootConfig {
   }
 
   @Bean
+  public LoggerFilter loggerFilter() {
+    return new LoggerFilter(env);
+  }
+
+  @Bean
+  public XssFilter xssFilter() {
+    return new XssFilter(env);
+  }
+
+  @Bean
   public SmsService smsService() {
     return new QCloudSmsService(
       env.getRequiredProperty("sms.appid"),
