@@ -1,9 +1,11 @@
 package ms.login.model;
 
 import java.util.*;
+import javax.servlet.http.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.springframework.validation.*;
+import org.springframework.web.context.request.*;
 
 public class ApiResult<Data> {
   private int code;
@@ -20,9 +22,20 @@ public class ApiResult<Data> {
     this(code, Errno.getMessage(code));
   }
 
+  void setErrorHint() {
+    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+                                  .getRequestAttributes()).getRequest();
+    String error = String.valueOf(code) + ":" +
+      (message.length() > 84 ? message.substring(0, 84) : message);
+    HttpServletResponse response = (HttpServletResponse) request.getAttribute("response__");
+    if (response != null) response.setHeader("ApiResultError", error);
+    request.setAttribute("ApiResultError", error);
+  }
+
   public ApiResult(int code, String message) {
     this.code = code;
     this.message = message;
+    if (this.code != Errno.OK) setErrorHint();
   }
 
   public ApiResult(Data data) {
