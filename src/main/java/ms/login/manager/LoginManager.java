@@ -317,7 +317,7 @@ public class LoginManager {
     String token = null;
 
     OpenAccount openAccount = openAccountMapper.findByOpenId(user.getOpenId());
-    if (openAccount != null) {
+    if (openAccount != null && openAccount.getStatus() == OpenAccount.Status.AGREE) {
       Account account = accountMapper.find(openAccount.getUid());
       if (account != null) {
         token = rememberMeService.login(
