@@ -99,10 +99,10 @@ public class LoggerFilter implements Filter {
                logHttpPut && method.equals("PUT")) {
       String contentType = req.getContentType();
       if (contentType != null &&
-          (contentType.equals("application/x-www-form-urlencoded") ||
-           contentType.equals("multipart/form-data") ||
-           contentType.equals("application/json") ||
-           contentType.equals("text/plain"))) {
+          (contentType.startsWith("application/x-www-form-urlencoded") ||
+           contentType.startsWith("multipart/form-data") ||
+           contentType.startsWith("application/json") ||
+           contentType.startsWith("text/plain"))) {
         return true;
       }
     }

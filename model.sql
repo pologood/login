@@ -2,8 +2,8 @@
 
 CREATE TABLE IF NOT EXISTS `account`  (
   `id`       BIGINT AUTO_INCREMENT PRIMARY KEY,
-  `phone`    VARCHAR(15) UNIQUE,
-  `email`    VARCHAR(64) UNIQUE,
+  `phone`    VARCHAR(19) UNIQUE,
+  `email`    VARCHAR(68) UNIQUE,
   `password` CHAR(64),
   `name`     VARCHAR(32),
   `headImg`  VARCHAR(256),

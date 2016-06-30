@@ -150,6 +150,15 @@ public class LoginController {
     return loginManager.updateAccount(user, account);
   }
 
+  @ApiMethod(description = "destroy account")
+  @RequestMapping(value = "/account", method = RequestMethod.DELETE)
+  public ApiResult deleteAccount(
+    @AuthenticationPrincipal RedisRememberMeService.User user,
+    HttpServletResponse response) {
+    return loginManager.deleteAccount(user.getUid(), response);
+  }
+  
+
   @ApiMethod(description = "get account")
   @RequestMapping(value = "/account", method = RequestMethod.GET)
   public ApiResult getAccount(

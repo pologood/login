@@ -57,6 +57,17 @@ public interface AccountMapper {
       }
       return sql.WHERE("id = #{id}").toString();        
     }
+
+    public static String delete(Account account) {
+      SQL sql = new SQL().UPDATE(TABLE);
+      if (account.getPhone() != null) {
+        sql.SET("phone = #{phone}");
+      }
+      if (account.getEmail() != null) {
+        sql.SET("email = #{email}");
+      }
+      return sql.WHERE("id = #{id}").toString();        
+    }
   }
 
   @Select(Sql.SELECT_BY_ID)
@@ -88,4 +99,8 @@ public interface AccountMapper {
   @Update(Sql.REVOKE_INCID_PERM)
   int revokeIncIdAndPerm(@Param("id") long id, @Param("incId") int incId,
                          @Param("perm") long perm);
+
+  @UpdateProvider(type = Sql.class, method = "delete")
+  int delete(Account account);
+  
 }

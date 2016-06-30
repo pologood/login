@@ -1,6 +1,7 @@
 package ms.login.entity;
 
 import java.util.List;
+import javax.validation.constraints.*;
 import org.jsondoc.core.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -33,18 +34,22 @@ public class Account {
   long   id;
 
   @ApiObjectField(description = "phone number")
+  @Size(max = 15)
   String phone;
 
   @ApiObjectField(description = "email address")
+  @Size(max = 64)
   String email;
 
   @ApiObjectField(description = "password")
   String password;
 
   @ApiObjectField(description = "nickname")
+  @Size(max = 16)
   String name;
 
   @ApiObjectField(description = "headimg")
+  @Size(max = 256)
   String headImg;
   
   @ApiObjectField(description = "status")

@@ -181,6 +181,30 @@ public class LoginManager {
     return ApiResult.ok();
   }
 
+  public ApiResult deleteAccount(long uid, HttpServletResponse response) {
+    Account account = accountMapper.find(uid);
+    if (account == null) return ApiResult.ok();
+
+    String phone = account.getPhone();
+    String email = account.getEmail();
+
+    for (int i = 0; i < 100; ++i) {
+      String rand = StringHelper.random(3);
+      if (phone != null) {
+        account.setPhone(phone + "#" + rand);
+      }
+      if (email != null) {
+        account.setEmail(email + "#" + rand);
+      }
+      try {
+        accountMapper.delete(account);
+        return logout(String.valueOf(uid), response);
+      } catch (DuplicateKeyException e) {
+      }
+    }
+    return ApiResult.badRequest("delete too much");
+  }
+
   Account getLocalAccount(String accountName) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
