@@ -88,6 +88,7 @@ public class PermManager {
   public ApiResult grantBoss(long uid, int incId) {
     int r = accountMapper.updateIncIdAndPerm(uid, incId, Account.BOSS);
     if (r <= 0) return new ApiResult(Errno.GRANT_BOSS_ERROR);
+    updateRememberMe(uid, null);
     return ApiResult.ok();
   }
 
@@ -111,6 +112,9 @@ public class PermManager {
 
   void updateRememberMe(long uid, List<Long> perms) {
     Account account = accountMapper.find(uid);
+    if (account.getPerm() == Account.BOSS) {
+      perms = Arrays.asList(account.getPerm());
+    }
     rememberMeService.update(
       new User(uid, account.getName(), account.getIncId(), perms));
   }
