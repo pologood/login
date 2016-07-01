@@ -22,7 +22,7 @@ class UserInfo {
 
 public class XiaopLoginService extends LoginService {
   public static final String API =
-    "http://puboa.sogou-inc.com/moa/sylla/mapi/pns/checktoken?token={token}";
+    "https://puboa.sogou-inc.com/moa/sylla/mapi/pns/auth?token={token}";
 
   RestTemplate rest;
     
