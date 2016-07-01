@@ -1,6 +1,7 @@
 package commons.saas;
 
 import java.util.Arrays;
+import java.nio.charset.Charset;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,11 +38,14 @@ class SendSmsRespBody {
 }
 
 public class QCloudSmsService extends SmsService {
+  private static final Charset charset = Charset.forName("UTF-8");
   private String appkey;
   private String uri;
+  private RestTemplate rest;
 
-  public QCloudSmsService(String appid, String appkey, JedisPool jedisPool) {
+  public QCloudSmsService(RestTemplate rest, String appid, String appkey, JedisPool jedisPool) {
     super(jedisPool);
+    this.rest = rest;
     this.appkey = appkey;
     this.uri = "https://yun.tim.qq.com/v3/tlssmssvr/sendsms?sdkappid=" + appid;
   }
@@ -50,18 +54,13 @@ public class QCloudSmsService extends SmsService {
     SendSmsReqBody reqBody = new SendSmsReqBody();
     reqBody.tel = new Phone(phone);
     reqBody.msg = msg;
-    reqBody.sig = DigestHelper.md5((appkey + phone).getBytes());
-
-    RestTemplate restTemplate = new RestTemplate();
-
-    LooseGsonHttpMessageConverter converter[] = { new LooseGsonHttpMessageConverter() };
-    restTemplate.setMessageConverters(Arrays.asList(converter));
+    reqBody.sig = DigestHelper.md5((appkey + phone).getBytes(charset));
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     HttpEntity<SendSmsReqBody> reqEntity = new HttpEntity<>(reqBody, headers);
 
-    ResponseEntity<SendSmsRespBody> respEntity = restTemplate.exchange(
+    ResponseEntity<SendSmsRespBody> respEntity = rest.exchange(
       uri, HttpMethod.POST, reqEntity, SendSmsRespBody.class);
 
     if (respEntity.getStatusCode() != HttpStatus.OK) {

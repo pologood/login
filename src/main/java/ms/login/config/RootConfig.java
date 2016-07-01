@@ -1,5 +1,6 @@
 package ms.login.config;
 
+import java.util.Arrays;
 import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
@@ -42,6 +43,7 @@ public class RootConfig {
   @Bean
   public SmsService smsService() {
     return new QCloudSmsService(
+      restTemplate(),
       env.getRequiredProperty("sms.appid"),
       env.getRequiredProperty("sms.appkey"),
       jedisPool()
@@ -59,7 +61,12 @@ public class RootConfig {
       new HttpComponentsClientHttpRequestFactory();
     factory.setConnectTimeout(Integer.parseInt(env.getProperty("rest.timeout.connect", "1000")));
     factory.setReadTimeout(Integer.parseInt(env.getProperty("rest.timeout.read", "10000")));
-    return new RestTemplate(factory);
+    
+    RestTemplate rest = new RestTemplate(factory);
+    rest.setInterceptors(Arrays.asList(new RestTemplateFilter()));
+    rest.getMessageConverters().add(new LooseGsonHttpMessageConverter());
+
+    return rest;
   }
 
   @Bean
@@ -72,7 +79,7 @@ public class RootConfig {
 
   @Bean
   public LoginServiceProvider loginServiceProvider() {
-    XiaopLoginService xiaop = new XiaopLoginService(jedisPool());
+    XiaopLoginService xiaop = new XiaopLoginService(restTemplate(), jedisPool());
     
     LoginServiceProvider provider = new LoginServiceProvider();
     provider.register(LoginServiceProvider.Name.XiaoP, xiaop);

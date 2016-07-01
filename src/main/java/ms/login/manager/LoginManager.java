@@ -78,7 +78,7 @@ public class LoginManager {
     try (Jedis c = jedisPool.getResource()) {
       long cnt = c.incr(key);
       if (cnt == 1) {
-        c.expire(key, 60);
+        c.expire(key, 300);
       } else if (cnt >= 3) {
         return Errno.IDENTIFY_CODE_REQUIRED;
       }

@@ -23,13 +23,16 @@ class UserInfo {
 public class XiaopLoginService extends LoginService {
   public static final String API =
     "http://puboa.sogou-inc.com/moa/sylla/mapi/pns/checktoken?token={token}";
+
+  RestTemplate rest;
     
-  public XiaopLoginService(JedisPool jedisPool) {
+  public XiaopLoginService(RestTemplate rest, JedisPool jedisPool) {
     super(jedisPool);
+    this.rest = rest;
   }
     
   protected User doLogin(String tmpToken) {
-    HttpRet ret = new RestTemplate().getForObject(API, HttpRet.class, tmpToken);
+    HttpRet ret = rest.getForObject(API, HttpRet.class, tmpToken);
     if (ret.status != 0) return null;
     
     LoginService.User user = new LoginService.User();
