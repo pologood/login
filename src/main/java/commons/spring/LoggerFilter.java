@@ -26,7 +26,7 @@ public class LoggerFilter implements Filter {
       def = "true";
     }
 
-    logHttpGet    = Boolean.parseBoolean(env.getProperty("logfilter.get", "false"));
+    logHttpGet    = Boolean.parseBoolean(env.getProperty("logfilter.get", "true"));
     logHttpPost   = Boolean.parseBoolean(env.getProperty("logfilter.post", def));
     logHttpPut    = Boolean.parseBoolean(env.getProperty("logfilter.put", def));
     logHttpDelete = Boolean.parseBoolean(env.getProperty("logfilter.delete", def));
