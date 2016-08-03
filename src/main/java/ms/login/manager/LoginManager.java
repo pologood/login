@@ -159,7 +159,7 @@ public class LoginManager {
     Account account = accountMapper.find(user.getUid());
     if (account == null) return ApiResult.internalError("uid not found");
 
-    if (checkPassword(password, account.getPassword())) {
+    if (checkPassword(oldPassword, account.getPassword())) {
       accountMapper.updatePasswordById(user.getUid(), encodePassword(password));
       String token = rememberMeService.login(response, user);
       return new ApiResult<String>(token);
@@ -198,7 +198,8 @@ public class LoginManager {
       }
       try {
         accountMapper.delete(account);
-        return logout(String.valueOf(uid), response);
+        rememberMeService.logout(String.valueOf(uid), response, true);
+        return ApiResult.ok();
       } catch (DuplicateKeyException e) {
       }
     }
@@ -358,7 +359,7 @@ public class LoginManager {
   }
 
   public ApiResult logout(String id, HttpServletResponse response) {
-    rememberMeService.logout(id, response);
+    rememberMeService.logout(id, response, false);
     return ApiResult.ok();
   }
 

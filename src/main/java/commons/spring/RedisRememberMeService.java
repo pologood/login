@@ -174,6 +174,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public String toString() {
+      if (name == null) name = "";
       if (name.indexOf(':') != -1) name = name.replace(':', '_');
       return String.join(":", uid, token, name, createAt, incId, perms);
     }
@@ -264,9 +265,11 @@ public class RedisRememberMeService implements RememberMeServices {
     return token;    
   }
 
-  public void logout(String id, HttpServletResponse response) {
-    try (Jedis c = jedisPool.getResource()) {
-      c.del(cacheKey(id));
+  public void logout(String id, HttpServletResponse response, boolean all) {
+    if (all) {
+      try (Jedis c = jedisPool.getResource()) {
+        c.del(cacheKey(id));
+      }
     }
     
     if (response != null) {

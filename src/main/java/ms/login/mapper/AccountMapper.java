@@ -21,7 +21,7 @@ public interface AccountMapper {
 
     final static String GRANT_INCID_PERM = "UPDATE " + TABLE +
       " SET incId = #{incId}, perm = #{perm}" +
-      " WHERE id = #{id} AND incId < 0";
+      " WHERE id = #{id} AND (incId < 0 OR incId = #{incId})";
 
     final static String REVOKE_INCID_PERM = "UPDATE " + TABLE +
       " SET incId = #{incId}, perm = #{perm} WHERE id = #{id}";
