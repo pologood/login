@@ -1,6 +1,7 @@
 package ms.login.entity;
 
 import org.jsondoc.core.annotation.*;
+import commons.utils.XssHelper;
 
 @ApiObject(name = "Address", description = "user address")
 public class Address {
@@ -128,5 +129,17 @@ public class Address {
   }
   public String getAddress9() {
     return this.address9;
-  }    
+  }
+
+  public void makeXssSafe() {
+    if (address1 != null) address1 = XssHelper.makeJsonSafe(address1);
+    if (address2 != null) address2 = XssHelper.makeJsonSafe(address2);
+    if (address3 != null) address3 = XssHelper.makeJsonSafe(address3);
+    if (address4 != null) address4 = XssHelper.makeJsonSafe(address4);
+    if (address5 != null) address5 = XssHelper.makeJsonSafe(address5);
+    if (address6 != null) address6 = XssHelper.makeJsonSafe(address6);
+    if (address7 != null) address7 = XssHelper.makeJsonSafe(address7);
+    if (address8 != null) address8 = XssHelper.makeJsonSafe(address8);
+    if (address9 != null) address9 = XssHelper.makeJsonSafe(address9);        
+  }
 }

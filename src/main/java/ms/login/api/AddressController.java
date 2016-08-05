@@ -78,6 +78,8 @@ public class AddressController {
     if (address8 != null) address.setAddress8(address8);
     if (address9 != null) address.setAddress9(address9);
 
+    address.makeXssSafe();
+
     return addressManager.setAddress(address);
   }
 
