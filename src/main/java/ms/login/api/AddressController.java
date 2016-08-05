@@ -38,7 +38,7 @@ public class AddressController {
   @RequestMapping(value = "/address", method = RequestMethod.PUT)
   public ApiResult setAddress(
     @AuthenticationPrincipal User user,
-    @ApiQueryParam(name = "default", description = "default address")
+    @ApiQueryParam(name = "def", description = "default address")
     @RequestParam(required = false) Optional<Integer> def,
     @ApiQueryParam(name = "address1", description = "address 1")
     @RequestParam(required = false) String address1,
@@ -59,9 +59,9 @@ public class AddressController {
     @ApiQueryParam(name = "address9", description = "address 9")
     @RequestParam(required = false) String address9) {
 
-    if (!def.isPresent() || address1 == null || address2 == null || address3 == null ||
-        address4 == null || address5 == null || address6 == null || address7 == null ||
-        address8 == null || address9 == null) {
+    if (!def.isPresent() && address1 == null && address2 == null && address3 == null &&
+        address4 == null && address5 == null && address6 == null && address7 == null &&
+        address8 == null && address9 == null) {
       return ApiResult.ok();
     }
 
