@@ -80,9 +80,17 @@ public class RootConfig {
   @Bean
   public LoginServiceProvider loginServiceProvider() {
     XiaopLoginService xiaop = new XiaopLoginService(restTemplate(), jedisPool());
-    
+
     LoginServiceProvider provider = new LoginServiceProvider();
     provider.register(LoginServiceProvider.Name.XiaoP, xiaop);
+
+    if (env.getProperty("login.wx.appid") != null) {
+      WxLoginService wx = new WxLoginService(
+        restTemplate(), jedisPool(),
+        env.getRequiredProperty("login.wx.appid"), env.getRequiredProperty("login.wx.secret"));
+      provider.register(LoginServiceProvider.Name.WeiXin, wx);
+    }
+    
     return provider;
   }
 }

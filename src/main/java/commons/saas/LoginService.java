@@ -11,6 +11,7 @@ public abstract class LoginService {
     private String name;
     private String headImg;
     private Map<String, String> info;
+    private long uid = Long.MIN_VALUE;
     
     public void setOpenId(String openId) {
       this.openId = openId;
@@ -38,6 +39,13 @@ public abstract class LoginService {
     }
     public Map<String, String> getInfo() {
       return this.info;
+    }
+
+    public void setUid(long uid) {
+      this.uid = uid;
+    }
+    public long getUid() {
+      return this.uid;
     }
   }
   

@@ -227,17 +227,25 @@ public class LoginManager {
     return null;
   }
 
-  ApiResult getOpenAccount(String openId) {
+  ApiResult getOpenAccount(String openId, boolean pcf) {
     LoginService service = loginServiceProvider.get(openId);
     if (service == null) return ApiResult.unAuthorized();
     LoginService.User user = service.info(openId);
     if (user == null) return ApiResult.unAuthorized();
-    else return new ApiResult<LoginService.User>(user);
+
+    if (pcf) {
+      OpenAccount openAccount = openAccountMapper.findByOpenId(user.getOpenId());
+      if (openAccount != null && openAccount.getStatus() == OpenAccount.Status.AGREE) {
+        user.setUid(openAccount.getUid());
+      }
+    }
+    
+    return new ApiResult<LoginService.User>(user);
   }
 
-  public ApiResult getAccount(User user) {
+  public ApiResult getAccount(User user, boolean pcf) {
     if (user.isOpen()) {
-      return getOpenAccount(user.getId());
+      return getOpenAccount(user.getId(), pcf);
     } else {
       Account account = getLocalAccount(user.getUid());
       if (account == null) return ApiResult.notFound();
@@ -292,7 +300,7 @@ public class LoginManager {
   }
 
   public ApiResult login(String accountName, String password, Optional<String> id,
-                         Optional<String> idcode, String openId,
+                         Optional<String> idcode, String openId, boolean pcf,
                          HttpServletResponse response) {
     int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
     if (errno != Errno.OK) return new ApiResult(errno);
@@ -321,9 +329,15 @@ public class LoginManager {
       openAccount.setUid(account.getId());
       openAccount.setStatus(OpenAccount.Status.AGREE);
       openAccountMapper.bind(openAccount);
+
+      User u;
+      if (pcf) {
+        u = new User(account.getId(), user.getName(), account.getIncId(), getPermIds(account));
+      } else {
+        u = new User(openId, user.getName(), account.getIncId(), getPermIds(account));
+      }
       
-      token = rememberMeService.login(
-        response, new User(openId, user.getName(), account.getIncId(), getPermIds(account)));
+      token = rememberMeService.login(response, u);
     } else {
       token = rememberMeService.login(
         response, new User(account.getId(), account.getName(),
@@ -333,7 +347,7 @@ public class LoginManager {
     return new ApiResult<String>(token);
   }
 
-  public ApiResult login(String tmpToken, LoginServiceProvider.Name provider,
+  public ApiResult login(String tmpToken, boolean pcf, LoginServiceProvider.Name provider,
                          HttpServletResponse response) {
     LoginService service = loginServiceProvider.get(provider);
     LoginService.User user = service.login(tmpToken);
@@ -345,9 +359,14 @@ public class LoginManager {
     if (openAccount != null && openAccount.getStatus() == OpenAccount.Status.AGREE) {
       Account account = accountMapper.find(openAccount.getUid());
       if (account != null) {
-        token = rememberMeService.login(
-          response, new User(user.getOpenId(), user.getName(),
-                             account.getIncId(), getPermIds(account)));
+        User u;
+        if (pcf) {
+          u = new User(account.getId(), user.getName(), account.getIncId(), getPermIds(account));
+        } else {
+          u = new User(user.getOpenId(), user.getName(), account.getIncId(), getPermIds(account));
+        }
+        
+        token = rememberMeService.login(response, u);
       }
     }
 

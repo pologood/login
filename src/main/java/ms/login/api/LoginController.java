@@ -162,8 +162,10 @@ public class LoginController {
   @ApiMethod(description = "get account")
   @RequestMapping(value = "/account", method = RequestMethod.GET)
   public ApiResult getAccount(
-    @AuthenticationPrincipal RedisRememberMeService.User user) {
-    return loginManager.getAccount(user);
+    @AuthenticationPrincipal RedisRememberMeService.User user,
+    @ApiQueryParam(name = "pcf", description = "pc first, default false")
+    @RequestParam Optional<Boolean> pcf) {
+    return loginManager.getAccount(user, pcf.orElse(false));
   }
   
   @ApiMethod(description = "get other user account")
@@ -200,12 +202,17 @@ public class LoginController {
     @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
     @RequestParam(required = false) Optional<String> id,
     @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
+    
     @ApiQueryParam(name = "openId", description = "login and binding to openid") 
     @RequestParam Optional<String> openId,
+    @ApiQueryParam(name = "pcf", description = "pc first, default false") 
+    @RequestParam Optional<Boolean> pcf,
+    
     HttpServletResponse response) {
     
     if (!id.isPresent()) id = idc;
-    return loginManager.login(account, password, id, idcode, openId.orElse(null), response);
+    return loginManager.login(account, password, id, idcode,
+                              openId.orElse(null), pcf.orElse(false), response);
   }
 
   @ApiMethod(description = "xiaop oauth login")
@@ -214,7 +221,20 @@ public class LoginController {
     @ApiQueryParam(name = "token", description = "oauth token")
     @RequestParam String token,
     HttpServletResponse response) {
-    return loginManager.login(token, LoginServiceProvider.Name.XiaoP, response);
+    return loginManager.login(token, false, LoginServiceProvider.Name.XiaoP, response);
+  }
+  
+  @ApiMethod(description = "xiaop oauth login")
+  @RequestMapping(value = "/login/oauth/wx", method = RequestMethod.GET)
+  public ApiResult login(
+    @ApiQueryParam(name = "token", description = "oauth token")
+    @RequestParam String token,
+    @ApiQueryParam(name = "pcf", description = "pc first, default false") 
+    @RequestParam Optional<Boolean> pcf,
+    
+    HttpServletResponse response) {
+    return loginManager.login(token, pcf.orElse(false),
+                              LoginServiceProvider.Name.WeiXin, response);
   }
 
   @ApiMethod(description = "oauth login")
@@ -225,7 +245,7 @@ public class LoginController {
     @ApiQueryParam(name = "provider", description = "login service provider")
     @RequestParam LoginServiceProvider.Name provider,
     HttpServletResponse response) {
-    return loginManager.login(token, provider, response);
+    return loginManager.login(token, false, provider, response);
   }
 
   @ApiMethod(description = "logout")
