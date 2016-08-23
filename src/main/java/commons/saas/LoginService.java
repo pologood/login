@@ -48,11 +48,39 @@ public abstract class LoginService {
       return this.uid;
     }
   }
+
+  public static class TokenCtx {
+    public String token;
+    public int expireTime;
+  }
   
   private JedisPool jedisPool;
+  static final String ACCESS_TOKEN = "LoginServiceAccessToken_";
   
   public LoginService(JedisPool jedisPool) {
     this.jedisPool = jedisPool;
+  }
+
+  public abstract String getName();
+
+  protected TokenCtx doGetAccessToken() {
+    throw new RuntimeException("LoginService.doGetAccessToken() not implement");
+  }
+  
+  public String getAccessToken() {
+    String token = null;
+    try (Jedis c = jedisPool.getResource()) {
+      String key = ACCESS_TOKEN + getName();
+      token = c.get(key);
+      if (token == null) {
+        TokenCtx ctx = doGetAccessToken();
+        if (ctx != null) {
+          c.setex(key, ctx.expireTime, ctx.token);
+          token = ctx.token;
+        }
+      }
+    }
+    return token;
   }
     
   protected abstract User doLogin(String tmpToken);

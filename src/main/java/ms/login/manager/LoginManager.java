@@ -263,7 +263,28 @@ public class LoginManager {
     return getAccountPermCheck(account, user, token);
   }
 
-  public ApiResult getAccountPermCheck(Account account, User user, Optional<String> token) {
+  public ApiResult getAccount(long uid, LoginServiceProvider.Name provider) {
+    List<OpenAccount> accounts = openAccountMapper.findByUid(uid);
+    
+    OpenAccount account = null;
+    for (OpenAccount a : accounts) {
+      if (LoginServiceProvider.getProvider(a.getOpenId()) == provider) {
+        account = a;
+        break;
+      }
+    }
+
+    if (account != null) {
+      LoginService loginService = loginServiceProvider.get(account.getOpenId());
+      String token = loginService.getAccessToken();
+      if (token == null) return new ApiResult(Errno.OPEN_ACCESS_TOKEN_ERROR);
+      return new ApiResult<Map>(MapHelper.make("openId", account.getOpenId(), "token", token));
+    } else {
+      return ApiResult.notFound();
+    }    
+  }
+
+  ApiResult getAccountPermCheck(Account account, User user, Optional<String> token) {
     if (account == null) return ApiResult.notFound();
 
     if (token.isPresent()) {

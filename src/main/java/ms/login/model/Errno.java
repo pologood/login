@@ -23,6 +23,8 @@ public class Errno {
   public static final int GRANT_BOSS_ERROR        = 1105;
   public static final int INC_EXISTS              = 1106;
 
+  public static final int OPEN_ACCESS_TOKEN_ERROR = 1200;
+
   public static String getMessage(int code) {
     switch (code) {
     case OK: return "OK";
@@ -44,6 +46,8 @@ public class Errno {
     case INVALID_INVATATION_CODE: return "invalid invatation";
     case GRANT_BOSS_ERROR: return "uid not found or is in inc.";
     case INC_EXISTS: return "uid can only be belong to one inc.";
+
+    case OPEN_ACCESS_TOKEN_ERROR: return "get access token error";
     default: return "";
     }
   }

@@ -16,10 +16,15 @@ public class LoginServiceProvider {
     }
   }
 
+  public static Name getProvider(String openId) {
+    if (openId.startsWith("xiaop_")) return Name.XiaoP;
+    else if (openId.startsWith("weixin_")) return Name.WeiXin;
+    return null;    
+  }
+
   public LoginService get(String openId) {
-    if (openId.startsWith("xiaop_")) return xiaop;
-    else if (openId.startsWith("weixin_")) return weixin;
-    return null;
+    Name name = getProvider(openId);
+    return get(name);
   }
 
   public void register(Name name, LoginService service) {

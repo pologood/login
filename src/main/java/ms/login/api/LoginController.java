@@ -188,6 +188,18 @@ public class LoginController {
     @ApiQueryParam(name = "token", description = "use token to access other account")
     @RequestParam Optional<String> token) {
     return loginManager.getAccount(user, uid, token);
+  }
+
+  @ApiMethod(description = "get other user open account")
+  @RequestMapping(value = "/account/uid/{uid}/openId", method = RequestMethod.GET)
+  public ApiResult getOpenAccount(
+    @AuthenticationPrincipal RedisRememberMeService.User user,
+    @ApiPathParam(name = "uid", description = "other account's uid")
+    @PathVariable long uid,
+    @ApiQueryParam(name = "provider", description = "login service provider")
+    @RequestParam LoginServiceProvider.Name provider) {
+    if (!user.isInternal()) return ApiResult.forbidden();
+    return loginManager.getAccount(uid, provider);
   }  
 
   @ApiMethod(description = "login, phone OR email must provide one")

@@ -30,6 +30,10 @@ public class XiaopLoginService extends LoginService {
     super(jedisPool);
     this.rest = rest;
   }
+
+  public String getName() {
+    return "xiaop";
+  }
     
   protected User doLogin(String tmpToken) {
     HttpRet ret = rest.getForObject(API, HttpRet.class, tmpToken);

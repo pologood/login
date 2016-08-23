@@ -40,9 +40,17 @@ class GetUserInfoResult {
   public int code = Integer.MAX_VALUE;
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+class GetAccessTokenResult {
+  public String access_token;
+  public int expires_in = 7200;
+  public int errcode = Integer.MAX_VALUE;
+}
+
 public class WxLoginService extends LoginService {
   public static final String OAUTH_ACCESS_TOKEN_API = "https://api.weixin.qq.com/sns/oauth2/access_token?appid={appid}&secret={secret}&code={code}&grant_type=authorization_code";
   public static final String SNS_USERINFO_API       = "https://api.weixin.qq.com/sns/userinfo?access_token={access_token}&openid={openid}&lang=zh_CN";
+  public static final String ACCESS_TOKEN_API       = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={appid}&secret={secret}";
 
   RestTemplate rest;
   String appid;
@@ -53,6 +61,21 @@ public class WxLoginService extends LoginService {
     this.rest = rest;
     this.appid = appid;
     this.secret = secret;
+  }
+
+  public String getName() {
+    return "weixin";
+  }
+
+  protected TokenCtx doGetAccessToken() {
+    GetAccessTokenResult r = rest.getForObject(
+      ACCESS_TOKEN_API, GetAccessTokenResult.class, appid, secret);
+    if (r == null || r.errcode != 0) return null;
+
+    TokenCtx ctx = new TokenCtx();
+    ctx.token = r.access_token;
+    ctx.expireTime = r.expires_in;
+    return ctx;
   }
 
   protected User doLogin(String tmpToken) {
