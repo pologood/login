@@ -4,15 +4,21 @@ import java.util.*;
 import javax.servlet.http.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.jsondoc.core.annotation.*;
 import org.springframework.validation.*;
 import org.springframework.web.context.request.*;
 
+@ApiObject(name = "ApiResult", description = "ApiResult")
 public class ApiResult<Data> {
+  @ApiObjectField(description = "error code")
   private int code;
+
+  @ApiObjectField(description = "error message")
   private String message;
 
+  @ApiObjectField(description = "payload")
   @JsonInclude(Include.NON_NULL)
-  Data data;
+  Data data;  
 
   public ApiResult() {
     this(Errno.OK);
