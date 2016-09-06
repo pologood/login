@@ -278,7 +278,7 @@ public class LoginManager {
       LoginService loginService = loginServiceProvider.get(account.getOpenId());
       String token = loginService.getAccessToken();
       if (token == null) return new ApiResult(Errno.OPEN_ACCESS_TOKEN_ERROR);
-      return new ApiResult<Map>(MapHelper.make("openId", account.getOpenId(), "token", token));
+      return new ApiResult<Map>(MapHelper.make("openId", account.getRawOpenId(), "token", token));
     } else {
       return ApiResult.notFound();
     }    

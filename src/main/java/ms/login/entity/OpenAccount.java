@@ -40,6 +40,12 @@ public class OpenAccount {
   public String getOpenId() {
     return this.openId;
   }
+  
+  public String getRawOpenId() {
+    int pos = openId.indexOf('_');
+    if (pos != -1) return openId.substring(pos+1);
+    else return openId;
+  }
 
   public void setNickname(String nickname) {
     this.nickname = nickname;
