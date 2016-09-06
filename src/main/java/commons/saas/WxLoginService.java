@@ -21,7 +21,7 @@ class GetUserTokenResult {
   public String scope;
 
   @JsonProperty("errcode")
-  public int code = Integer.MAX_VALUE;
+  public int code = 0;
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -37,14 +37,14 @@ class GetUserInfoResult {
   public String headImgUrl;
 
   @JsonProperty("errcode")
-  public int code = Integer.MAX_VALUE;
+  public int code = 0;
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class GetAccessTokenResult {
   public String access_token;
   public int expires_in = 7200;
-  public int errcode = Integer.MAX_VALUE;
+  public int errcode = 0;
 }
 
 public class WxLoginService extends LoginService {
