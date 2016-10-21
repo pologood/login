@@ -353,7 +353,8 @@ public class LoginManager {
 
       User u;
       if (pcf) {
-        u = new User(account.getId(), user.getName(), account.getIncId(), getPermIds(account));
+        long uid = account.getId();
+        u = new User(uid, openId, user.getName(), account.getIncId(), getPermIds(account));
       } else {
         u = new User(openId, user.getName(), account.getIncId(), getPermIds(account));
       }
@@ -398,8 +399,16 @@ public class LoginManager {
     return new ApiResult<String>(token);
   }
 
-  public ApiResult logout(String id, HttpServletResponse response) {
-    rememberMeService.logout(id, response, false);
+  public ApiResult logout(User user, HttpServletResponse response, boolean unbind) {
+    rememberMeService.logout(user.getId(), response, false);
+    if (unbind && !user.isOpen()) {
+      String openId = user.getOpenId();
+      if (openId != null) {
+        openAccountMapper.delete(openId, Long.parseLong(user.getId()));
+      } else {
+        openAccountMapper.deleteAll(Long.parseLong(user.getId()));
+      }
+    }
     return ApiResult.ok();
   }
 

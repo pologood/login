@@ -25,6 +25,8 @@ public interface OpenAccountMapper {
 
     static final String DELETE = "DELETE FROM " + TABLE +
       " WHERE openId = #{openId} AND uid = #{uid}";
+    static final String DELETE_ALL = "DELETE FROM " + TABLE +
+      " WHERE uid = #{uid}";
       
   }
 
@@ -43,5 +45,8 @@ public interface OpenAccountMapper {
 
   @Delete(Sql.DELETE)
   int delete(@Param("openId") String openId, @Param("uid") long uid);
+
+  @Delete(Sql.DELETE_ALL)
+  int deleteAll(long uid);
 }
 

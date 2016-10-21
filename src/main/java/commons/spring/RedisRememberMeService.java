@@ -34,11 +34,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public User(long uid, String name, int incId, List<Long> permIds) {
-      this.uid      = Optional.of(uid);
-      this.name     = name;
-      this.incId    = incId;
-      this.permIds  = permIds;
-      this.internal = false;
+      this(uid, null, name, incId, permIds);
     }
 
     public User(String openId, String name) {
@@ -46,7 +42,13 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public User(String openId, String name, int incId, List<Long> permIds) {
-      this.openId   = Optional.of(openId);
+      this(-1, openId, name, incId, permIds);
+    }
+
+    public User(long uid, String openId, String name, int incId, List<Long> permIds) {
+      if (uid > 0) this.uid = Optional.of(uid);
+      if (openId != null) this.openId   = Optional.of(openId);
+      
       this.name     = name;
       this.incId    = incId;
       this.permIds  = permIds;
@@ -59,6 +61,13 @@ public class RedisRememberMeService implements RememberMeServices {
 
     public long getUid() {
       return uid.get();
+    }
+
+    public String getOpenId() {
+      return openId == null ? null : openId.orElse(null);
+    }
+    public void setOpenId(String openId) {
+      this.openId = Optional.of(openId);
     }
 
     public void setName(String name) {
@@ -259,6 +268,9 @@ public class RedisRememberMeService implements RememberMeServices {
 
     if (response != null) {
       response.addCookie(newCookie("uid", cacheEntity.uid, maxAge, false));
+      if (user.getOpenId() != null) {
+        response.addCookie(newCookie("openId", user.getOpenId(), maxAge, false));
+      }
       response.addCookie(newCookie("token", token, maxAge, true));
     }
 
@@ -337,13 +349,15 @@ public class RedisRememberMeService implements RememberMeServices {
 
   Authentication autoLoginByRedisPool(HttpServletRequest request) {
     String token = null;
+    String openId = null;
     
     Cookie[] cookies = request.getCookies();
     if (cookies != null) {
       for (Cookie cookie : cookies) {
         if (cookie.getName().equals("token")) {
           token = cookie.getValue();
-          break;
+        } else if (cookie.getName().equals("openId")) {
+          openId = cookie.getValue();
         }
       }
     }
@@ -354,6 +368,8 @@ public class RedisRememberMeService implements RememberMeServices {
 
     User user = checkToken(token);
     if (user == null) return null;
+
+    if (openId != null) user.setOpenId(openId);
 
     List<GrantedAuthority> grantedAuths = new ArrayList<>();
     if (user.getPerms() != null) {

@@ -214,13 +214,21 @@ public class LoginController {
     @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
     @RequestParam(required = false) Optional<String> id,
     @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
-    
+
+    @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiQueryParam(name = "openId", description = "login and binding to openid") 
     @RequestParam Optional<String> openId,
     @ApiQueryParam(name = "pcf", description = "pc first, default false") 
     @RequestParam Optional<Boolean> pcf,
     
     HttpServletResponse response) {
+
+    if (openId.isPresent()) {
+      // check bind permission
+      if (user == null || !user.getId().equals(openId.get())) {
+        return ApiResult.unAuthorized();
+      }
+    }
     
     if (!id.isPresent()) id = idc;
     return loginManager.login(account, password, id, idcode,
@@ -264,8 +272,10 @@ public class LoginController {
   @RequestMapping(value = "/logout", method = RequestMethod.GET)
   public ApiResult logout(
     @AuthenticationPrincipal RedisRememberMeService.User user,
-    HttpServletResponse response) {
-    return loginManager.logout(user.getId(), response);
+    HttpServletResponse response,
+    @ApiQueryParam(name = "unbind", description = "unbind when logout")
+    @RequestParam Optional<Boolean> unbind) {
+    return loginManager.logout(user, response, unbind.orElse(false));
   }
 
   @ApiMethod(description = "get openId bind invitaion code")
@@ -309,5 +319,4 @@ public class LoginController {
     @PathVariable String openId) {
     return loginManager.unbindOpenId(user.getUid(), openId);
   } 
-  
 }
