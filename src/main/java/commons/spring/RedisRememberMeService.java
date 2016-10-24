@@ -232,14 +232,18 @@ public class RedisRememberMeService implements RememberMeServices {
     }
   }
 
+  // the cookie's expire is controlled by server, not cookie's expire attribute
   private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
     Cookie cookie = new Cookie(key, value);
     cookie.setPath("/");
     cookie.setDomain(domain);
-    cookie.setMaxAge(maxAge);
+    
+    // if maxAge > 0 ? cookie will be expired after 10 years.
+    cookie.setMaxAge(maxAge > 0 ? 86400 * 3650 : maxAge);
+    
     if (httpOnly) cookie.setHttpOnly(true);
     return cookie;
-  }    
+  }   
 
   private String cacheKey(long uid) {
     return KEY_PREFIX + String.valueOf(uid);
