@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `incPerm`  (
 CREATE TABLE IF NOT EXISTS `permission`  (
   `uid`      BIGINT,
   `incId`    INT(11),
+  `entity`   VARCHAR(128),
   `permId`   BIGINT,
   `grant`    TINYINT(4),
   INDEX(`uid`)

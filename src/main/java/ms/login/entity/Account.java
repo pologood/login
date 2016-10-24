@@ -4,6 +4,7 @@ import java.util.List;
 import javax.validation.constraints.*;
 import org.jsondoc.core.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import static commons.spring.RedisRememberMeService.UserPerm;
 
 @ApiObject(name = "Account", description = "Account info")
 @JsonIgnoreProperties("password")
@@ -12,6 +13,7 @@ public class Account {
   public static final long PLAT_ROBOT = 1;
   public static final long PLAT_ADMIN = 10;
   public static final long BOSS       = 100;
+  public static final long OWNER      = 101;
   public static final long PERM_EXIST = 9_999;
   
   public static final long SYS_PERM_MIN   = 10_000;
@@ -62,7 +64,7 @@ public class Account {
   long perm = Long.MAX_VALUE;
 
   @ApiObjectField(description = "grantPerms")
-  List<Long> grantPerms;
+  List<UserPerm> grantPerms;
 
   public void setId(long id) {
     this.id = id;
@@ -134,10 +136,10 @@ public class Account {
     return a <= b;
   }
 
-  public void setGrantPerms(List<Long> grantPerms) {
+  public void setGrantPerms(List<UserPerm> grantPerms) {
     this.grantPerms = grantPerms;
   }
-  public List<Long> getGrantPerms() {
+  public List<UserPerm> getGrantPerms() {
     return this.grantPerms;
   }
 }

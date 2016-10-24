@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import commons.utils.*;
 import commons.spring.RedisRememberMeService;
 import static commons.spring.RedisRememberMeService.User;
+import static commons.spring.RedisRememberMeService.UserPerm;
 import ms.login.model.*;
 import ms.login.entity.*;
 import ms.login.mapper.*;
@@ -110,10 +111,10 @@ public class PermManager {
     return new ApiResult<String>(code);
   }
 
-  void updateRememberMe(long uid, List<Long> perms) {
+  void updateRememberMe(long uid, List<UserPerm> perms) {
     Account account = accountMapper.find(uid);
     if (account.getPerm() == Account.BOSS) {
-      perms = Arrays.asList(account.getPerm());
+      perms = Arrays.asList(new UserPerm(account.getPerm()));
     }
     rememberMeService.update(
       new User(uid, account.getName(), account.getIncId(), perms));
@@ -127,11 +128,14 @@ public class PermManager {
       if (account == null) {
         account = accountMapper.find(perm.getUid());
         if (account != null) {
-          account.setGrantPerms(new ArrayList<Long>(Arrays.asList(perm.getPermId())));
+          List<UserPerm> userPerms = new ArrayList<>();
+          userPerms.add(new UserPerm(perm.getEntity(), perm.getPermId()));
+          
+          account.setGrantPerms(userPerms);
           map.put(perm.getUid(), account);
         }
       } else {
-        account.getGrantPerms().add(perm.getPermId());
+        account.getGrantPerms().add(new UserPerm(perm.getEntity(), perm.getPermId()));
       }
     }
 
@@ -159,7 +163,7 @@ public class PermManager {
     long permId = Long.parseLong(parts[2]);
     if (permId != -1) {
       grantPermImpl(uid, incId, permId, false);
-      updateRememberMe(uid, Arrays.asList(permId));      
+      updateRememberMe(uid, Arrays.asList(new UserPerm(permId)));      
     } else {
       updateRememberMe(uid, null);
     }

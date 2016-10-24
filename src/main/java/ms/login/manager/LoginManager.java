@@ -14,6 +14,7 @@ import commons.utils.*;
 import commons.saas.*;
 import commons.spring.RedisRememberMeService;
 import static commons.spring.RedisRememberMeService.User;
+import static commons.spring.RedisRememberMeService.UserPerm;
 import ms.login.model.*;
 import ms.login.entity.*;
 import ms.login.mapper.*;
@@ -308,16 +309,16 @@ public class LoginManager {
     return ApiResult.notFound();
   }
 
-  public List<Long> getPermIds(Account account) {
-    List<Long> permIds = null;
+  public List<UserPerm> getPermIds(Account account) {
+    List<UserPerm> perms = null;
 
     if (account.getPerm() == Account.PERM_EXIST) {
-      permIds = accountPermMapper.get(account.getId());
+      perms = accountPermMapper.get(account.getId());
     } else if (account.getPerm() != Long.MAX_VALUE) {
-      permIds = Arrays.asList(account.getPerm());
+      perms = Arrays.asList(new UserPerm(account.getPerm()));
     }
 
-    return permIds;
+    return perms;
   }
 
   public ApiResult login(String accountName, String password, Optional<String> id,

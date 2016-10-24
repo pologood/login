@@ -4,12 +4,13 @@ import java.util.*;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.jdbc.SQL;
 import ms.login.entity.AccountPerm;
+import commons.spring.RedisRememberMeService.UserPerm;
 
 public interface AccountPermMapper {
   class Sql {
     static final String TABLE  = "permission";
     static final String SELECT = "SELECT * FROM " + TABLE + " WHERE uid = #{uid}";
-    static final String SELECT_PERM = "SELECT permId FROM " + TABLE + " WHERE uid = #{uid}";
+    static final String SELECT_PERM = "SELECT entity, permId FROM " + TABLE + " WHERE uid = #{uid}";
 
     static final String SELECT_ACCOUNT = "SELECT * FROM " + TABLE + " WHERE incId = #{incId}";
       
@@ -28,7 +29,7 @@ public interface AccountPermMapper {
   List<AccountPerm> getByIncId(int incId);
 
   @Select(Sql.SELECT_PERM)
-  List<Long> get(long uid);
+  List<UserPerm> get(long uid);
 
   @Insert(Sql.INSERT)
   int add(AccountPerm perms);

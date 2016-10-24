@@ -10,6 +10,9 @@ public class AccountPerm {
   @ApiObjectField(description = "corporation id")
   long   incId;
 
+  @ApiObjectField(description = "permission entity")
+  String entity;
+
   @ApiObjectField(description = "permission id")
   long   permId;
 
@@ -28,6 +31,13 @@ public class AccountPerm {
   }
   public long getIncId() {
     return this.incId;
+  }
+
+  public void setEntity(String entity) {
+    this.entity = entity;
+  }
+  public String getEntity() {
+    return this.entity;
   }
 
   public void setPermId(long permId) {
