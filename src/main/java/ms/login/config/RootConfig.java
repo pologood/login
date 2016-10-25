@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.JedisPool;
@@ -78,11 +79,16 @@ public class RootConfig {
   }
 
   @Bean
-  public LoginServiceProvider loginServiceProvider() {
+  public LoginServiceProvider loginServiceProvider() throws IOException {
     XiaopLoginService xiaop = new XiaopLoginService(restTemplate(), jedisPool());
 
     LoginServiceProvider provider = new LoginServiceProvider();
     provider.register(LoginServiceProvider.Name.XiaoP, xiaop);
+
+    ClassPathResource resource = new ClassPathResource(env.getRequiredProperty("xiaop.publickey"));
+    XiaopLocalLoginService xiaopl = new XiaopLocalLoginService(
+      resource.getFile().getPath(), jedisPool());
+    provider.register(LoginServiceProvider.Name.XiaoPLocal, xiaopl);
 
     if (env.getProperty("login.wx.appid") != null) {
       WxLoginService wx = new WxLoginService(

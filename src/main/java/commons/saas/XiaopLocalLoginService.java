@@ -11,7 +11,7 @@ import commons.utils.JsonHelper;
 
 public class XiaopLocalLoginService extends LoginService {
   @JsonIgnoreProperties(ignoreUnknown = true)
-  class UserInfo {
+  public static class UserInfo {
     public String uid;
     public String name;
   }

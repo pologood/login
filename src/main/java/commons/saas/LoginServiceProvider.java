@@ -2,16 +2,18 @@ package commons.saas;
 
 public class LoginServiceProvider {
   public static enum Name {
-    XiaoP, WeiXin
+    XiaoP, WeiXin, XiaoPLocal,
   }
 
   private LoginService xiaop;
   private LoginService weixin;
+  private LoginService xiaopl;
 
   public LoginService get(Name name) {
     switch (name) {
     case XiaoP: return xiaop;      
     case WeiXin: return weixin;
+    case XiaoPLocal: return xiaopl;
     default: return null;
     }
   }
@@ -31,6 +33,7 @@ public class LoginServiceProvider {
     switch (name) {
     case XiaoP: xiaop = service;
     case WeiXin: weixin = service;
+    case XiaoPLocal: xiaopl = service;
     }
   }
 }

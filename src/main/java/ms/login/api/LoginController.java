@@ -239,9 +239,19 @@ public class LoginController {
   @RequestMapping(value = "/login/oauth/xiaop", method = RequestMethod.GET)
   public ApiResult login(
     @ApiQueryParam(name = "token", description = "oauth token")
-    @RequestParam String token,
+    @RequestParam Optional<String> token,
+    @ApiQueryParam(name = "encryptedData", description = "xiaop encrypted data")
+    @RequestParam Optional<String> encryptedData,
     HttpServletResponse response) {
-    return loginManager.login(token, false, LoginServiceProvider.Name.XiaoP, response);
+
+    if (token.isPresent()) {
+      return loginManager.login(token.get(), false, LoginServiceProvider.Name.XiaoP, response);
+    } else if (encryptedData.isPresent()) {
+      return loginManager.login(encryptedData.get(), false,
+                                LoginServiceProvider.Name.XiaoPLocal, response);
+    } else {
+      return ApiResult.badRequest("token or encryptedData is required");
+    }
   }
   
   @ApiMethod(description = "xiaop oauth login")
