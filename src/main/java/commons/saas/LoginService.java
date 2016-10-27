@@ -7,11 +7,19 @@ import commons.utils.JsonHelper;
 
 public abstract class LoginService {
   public static class User {
+    private long   id = -1;
     private String openId;
     private String name;
     private String headImg;
     private Map<String, String> info;
     private long uid = Long.MIN_VALUE;
+
+    public void setId(long id) {
+      this.id = id;
+    }
+    public long getId() {
+      return this.id;
+    }
     
     public void setOpenId(String openId) {
       this.openId = openId;

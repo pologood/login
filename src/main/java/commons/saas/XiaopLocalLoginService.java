@@ -14,6 +14,7 @@ public class XiaopLocalLoginService extends LoginService {
   public static class UserInfo {
     public String uid;
     public String name;
+    public String uno;
   }
 
   private PublicKey publicKey;
@@ -70,6 +71,7 @@ public class XiaopLocalLoginService extends LoginService {
       user.setOpenId("xiaop_" + info.uid);
       user.setName(info.name);
       user.setHeadImg("https://puboa.sogou-inc.com/moa/sylla/mapi/portrait?uid=" + info.uid);
+      user.setId(Integer.parseInt(info.uno));
       return user;
     } catch (Exception e) {
       throw new RuntimeException(e);

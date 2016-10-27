@@ -35,11 +35,13 @@ public class LoginManager {
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
   private String smsRegisterTemplate;
   private String tokenKey;
+  private boolean xiaopUseUno;
 
   @Autowired
   public LoginManager(Environment env) {
     smsRegisterTemplate = env.getRequiredProperty("sms.register.template");
     tokenKey = env.getProperty("security.token");
+    xiaopUseUno = Boolean.parseBoolean(env.getProperty("login.xiaop.uno", "false"));
   }
 
   private boolean isEmail(String account) {
@@ -376,28 +378,29 @@ public class LoginManager {
     LoginService.User user = service.login(tmpToken);
     if (user == null) return ApiResult.unAuthorized();
 
-    String token = null;
+    User u = null;
 
     OpenAccount openAccount = openAccountMapper.findByOpenId(user.getOpenId());
     if (openAccount != null && openAccount.getStatus() == OpenAccount.Status.AGREE) {
       Account account = accountMapper.find(openAccount.getUid());
       if (account != null) {
-        User u;
         if (pcf) {
           u = new User(account.getId(), user.getName(), account.getIncId(), getPermIds(account));
         } else {
           u = new User(user.getOpenId(), user.getName(), account.getIncId(), getPermIds(account));
         }
-        
-        token = rememberMeService.login(response, u);
       }
     }
 
-    if (token == null) {
-      token = rememberMeService.login(response, new User(user.getOpenId(), user.getName()));
+    if (xiaopUseUno && user.getId() > 0) {
+      u = new User(user.getId(), user.getName());
     }
 
-    return new ApiResult<String>(token);
+    if (u == null) {
+      u = new User(user.getOpenId(), user.getName());
+    }
+
+    return new ApiResult<String>(rememberMeService.login(response, u));
   }
 
   public ApiResult logout(User user, HttpServletResponse response, boolean unbind) {
