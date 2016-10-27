@@ -247,8 +247,8 @@ public class LoginManager {
   }
 
   public ApiResult getAccount(User user, boolean pcf) {
-    if (user.isOpen()) {
-      return getOpenAccount(user.getId(), pcf);
+    if (user.isOpen() || user.getOpenId() != null) {
+      return getOpenAccount(user.getOpenId(), pcf);
     } else {
       Account account = getLocalAccount(user.getUid());
       if (account == null) return ApiResult.notFound();
@@ -393,7 +393,7 @@ public class LoginManager {
     }
 
     if (xiaopUseUno && user.getId() > 0) {
-      u = new User(user.getId(), user.getName());
+      u = new User(user.getId(), user.getOpenId(), user.getName());
     }
 
     if (u == null) {

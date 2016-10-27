@@ -90,6 +90,10 @@ public class RedisRememberMeService implements RememberMeServices {
       this(-1, openId, name, incId, perms);
     }
 
+    public User(long uid, String openId, String name) {
+      this(uid, openId, name, Integer.MIN_VALUE, null);
+    }    
+
     public User(long uid, String openId, String name, int incId, List<UserPerm> perms) {
       if (uid > 0) this.uid = Optional.of(uid);
       if (openId != null) this.openId   = Optional.of(openId);
