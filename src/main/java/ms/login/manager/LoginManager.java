@@ -36,12 +36,14 @@ public class LoginManager {
   private String smsRegisterTemplate;
   private String tokenKey;
   private boolean xiaopUseUno;
+  private boolean permissionOn;
 
   @Autowired
   public LoginManager(Environment env) {
     smsRegisterTemplate = env.getRequiredProperty("sms.register.template");
     tokenKey = env.getProperty("security.token");
-    xiaopUseUno = Boolean.parseBoolean(env.getProperty("login.xiaop.uno", "false"));
+    xiaopUseUno = env.getProperty("login.xiaop.uno", Boolean.class, false);
+    permissionOn = env.getProperty("permissionOn", Boolean.class, false);
   }
 
   private boolean isEmail(String account) {
@@ -318,6 +320,8 @@ public class LoginManager {
       perms = accountPermMapper.get(account.getId());
     } else if (account.getPerm() != Long.MAX_VALUE) {
       perms = Arrays.asList(new UserPerm(account.getPerm()));
+    } else if (permissionOn) {
+      perms = accountPermMapper.get(account.getId());
     }
 
     return perms;

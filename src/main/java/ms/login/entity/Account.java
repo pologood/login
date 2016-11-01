@@ -14,6 +14,8 @@ public class Account {
   public static final long PLAT_ADMIN = 10;
   public static final long BOSS       = 100;
   public static final long OWNER      = 101;
+  public static final long ADMIN      = 201;
+  public static final long WATCHER    = 1001;
   public static final long PERM_EXIST = 9_999;
   
   public static final long SYS_PERM_MIN   = 10_000;

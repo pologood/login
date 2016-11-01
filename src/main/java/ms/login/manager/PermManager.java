@@ -4,6 +4,7 @@ import java.util.*;
 import redis.clients.jedis.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.*;
 import org.springframework.http.*;
 import commons.utils.*;
 import commons.spring.RedisRememberMeService;
@@ -93,6 +94,25 @@ public class PermManager {
     return ApiResult.ok();
   }
 
+  public ApiResult grantOwner(User user, long uid, String entity) {
+    if (uid == user.getUid()) return ApiResult.ok();
+    
+    List<UserPerm> uperms = user.getPerms();
+    boolean isOwner = false;
+    for (UserPerm perm : uperms) {
+      if (perm.getPermId() == Account.OWNER && entity.equals(perm.getEntity())) {
+        isOwner = true;
+        break;
+      }
+    }
+    if (!isOwner) return ApiResult.forbidden();
+
+    accountPermMapper.transfer(uid, user.getUid(), user.getIncId(), Account.OWNER, entity);
+    updateRememberMe(uid, accountPermMapper.get(uid));
+    updateRememberMe(uid, accountPermMapper.get(user.getUid()));
+    return ApiResult.ok();
+  }
+
   public ApiResult getInvitationCode(String id) {
     return getInvitationCode(id, null, -1);
   }
@@ -113,6 +133,8 @@ public class PermManager {
 
   void updateRememberMe(long uid, List<UserPerm> perms) {
     Account account = accountMapper.find(uid);
+    if (account == null) return;
+    
     if (account.getPerm() == Account.BOSS) {
       perms = Arrays.asList(new UserPerm(account.getPerm()));
     }
@@ -188,29 +210,70 @@ public class PermManager {
     accountPermMapper.add(perm);
   }
 
-  public ApiResult grantPerm(User user, long uid, List<Long> permIds, List<Boolean> options) {
-    if (user.getPerm() != Account.BOSS) {
+  private List<AccountPerm> parsePerms(List<String> perms) {
+    List<AccountPerm> uperms = new ArrayList<>();
+    for (String perm : perms) {
+      AccountPerm uperm = new AccountPerm();
+      
+      String parts[] = perm.split(":");
+      uperm.setPermId(Long.parseLong(parts[0]));
+      if (parts.length >= 2) {
+        uperm.setGrant(parts[1].equals("t"));
+      }
+      if (parts.length >= 3) {
+        uperm.setEntity(parts[2]);
+      }
+
+      uperms.add(uperm);
+    }
+    return uperms;
+  }
+
+  @Transactional
+  public ApiResult grantPerm(User user, long uid, int incId, List<String> perms) {
+    List<AccountPerm> uperms = parsePerms(perms);
+    
+    if (user.getPerm() != Account.BOSS && !user.isInternal()) {
       List<AccountPerm> userPerms = accountPermMapper.getAll(user.getUid());
-      for (long perm : permIds) {
+      for (AccountPerm perm : uperms) {
         boolean hasPerm = false;
         for (AccountPerm userPerm : userPerms) {
-          if (userPerm.getPermId() == perm) hasPerm = userPerm.getGrant();
+          if ((hasPerm = userPerm.canGrantPerm(perm))) break;
         }
         if (!hasPerm) return ApiResult.forbidden();
       }
     }
 
-    for (int i = 0; i < permIds.size(); ++i) {
-      grantPermImpl(uid, user.getIncId(), permIds.get(i), options.get(i));
+    for (AccountPerm perm : uperms) {
+      perm.setUid(uid);
+      perm.setIncId(incId);
+      if (perm.getPermId() == Account.OWNER) perm.setGrant(true);
+      accountPermMapper.add(perm);
     }
 
     updateRememberMe(uid, accountPermMapper.get(uid));
     return ApiResult.ok();
   }
-  
-  public ApiResult revokePerm(long uid, int incId, List<Long> permIds) {
-    for (long permId : permIds) {
-      accountPermMapper.delete(uid, incId, permId);
+
+  @Transactional
+  public ApiResult revokePerm(User user, long uid, int incId, List<String> perms) {
+    List<AccountPerm> uperms = parsePerms(perms);
+
+    if (user.getPerm() != Account.BOSS && !user.isInternal()) {
+      List<AccountPerm> userPerms = accountPermMapper.getAll(user.getUid());
+      for (AccountPerm perm : uperms) {
+        boolean hasPerm = false;
+        for (AccountPerm userPerm : userPerms) {
+          if ((hasPerm = userPerm.canRevokePerm(perm))) break;
+        }
+        if (!hasPerm) return ApiResult.forbidden();
+      }
+    }
+
+    for (AccountPerm perm : uperms) {
+      perm.setUid(uid);
+      perm.setIncId(incId);
+      accountPermMapper.delete(perm);
     }
     
     updateRememberMe(uid, accountPermMapper.get(uid));

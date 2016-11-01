@@ -169,23 +169,27 @@ public class PermController {
     return permManager.deleteFromInc(user.getIncId(), uid);
   }
 
+  @ApiMethod(description = "transfer owner")
+  @RequestMapping(value = "/perm/owner/{entity}/{uid}", method = RequestMethod.POST)
+  public ApiResult transferOwner(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "entity", description = "entity")
+    @PathVariable String entity,
+    @ApiPathParam(name = "uid", description = "user id")
+    @PathVariable long uid) {
+
+    return permManager.grantOwner(user, uid, entity);
+  }  
+
   @ApiMethod(description = "Grant permission")
   @RequestMapping(value = "/perm/user/{uid}", method = RequestMethod.PUT)
   public ApiResult grantPerm(
     @AuthenticationPrincipal User user,
     @ApiPathParam(name = "uid", description = "user id")
     @PathVariable long uid,
-    @ApiQueryParam(name = "permIds", description = "permission list")
-    @RequestParam List<Long> permIds,
-    @ApiQueryParam(name = "grantOptions", description = "grant option", format = "true|false")
-    @RequestParam(required = false) List<Boolean> grantOptions) {
-    if (grantOptions != null && permIds.size() != grantOptions.size())
-      return ApiResult.badRequest("grantOptions must match permIds");
-
-    if (grantOptions == null) {
-      grantOptions = Collections.nCopies(permIds.size(), false);
-    }
-    return permManager.grantPerm(user, uid, permIds, grantOptions);
+    @ApiQueryParam(name = "perms", description = "permission list")
+    @RequestParam List<String> perms) {
+    return permManager.grantPerm(user, uid, -1, perms);
   }
 
   @ApiMethod(description = "Revoke permission")
@@ -194,10 +198,9 @@ public class PermController {
     @AuthenticationPrincipal User user,
     @ApiPathParam(name = "uid", description = "user id")
     @PathVariable long uid,
-    @ApiQueryParam(name = "permIds", description = "permission list")
-    @RequestParam List<Long> permIds) {
-    if (user.getPerm() != Account.BOSS) return ApiResult.forbidden();
+    @ApiQueryParam(name = "perms", description = "permission list")
+    @RequestParam List<String> perms) {
     
-    return permManager.revokePerm(uid, user.getIncId(), permIds);    
+    return permManager.revokePerm(user, uid, -1, perms);    
   }
 }

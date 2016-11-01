@@ -53,4 +53,35 @@ public class AccountPerm {
   public boolean getGrant() {
     return this.grant;
   }
+
+  private boolean entityEqual(String entity) {
+    if (this.entity == null) {
+      return entity == null;
+    } else {
+      return this.entity.equals(entity);
+    }
+  }
+
+  public boolean canGrantPerm(AccountPerm perm) {
+    boolean idOk;
+    if (permId <= Account.OWNER) {
+      idOk = permId < perm.getPermId();
+    } else if (permId < Account.PERM_EXIST) {
+      idOk = permId <= perm.getPermId();
+    } else {
+      idOk = permId == perm.getPermId();
+    }
+
+    boolean entityOk = entityEqual(perm.getEntity());
+    return idOk && entityOk && grant;
+  }
+
+  public boolean canRevokePerm(AccountPerm perm) {
+    boolean idOk = true;
+    if (permId < Account.PERM_EXIST) {
+      idOk = permId < perm.getPermId();
+    }
+
+    return idOk && entityEqual(perm.getEntity());
+  }
 }

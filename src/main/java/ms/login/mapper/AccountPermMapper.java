@@ -15,11 +15,19 @@ public interface AccountPermMapper {
     static final String SELECT_ACCOUNT = "SELECT * FROM " + TABLE + " WHERE incId = #{incId}";
       
     static final String DELETE = "DELETE FROM " + TABLE +
-      " WHERE uid = #{uid} AND permId = #{permId}";
+      " WHERE uid = #{uid} AND incId = #{incId} AND entity = #{entity} AND permId = #{permId}";
+    
     static final String DELETE_ALL = "DELETE FROM " + TABLE + " WHERE uid = #{uid}";
 
     static final String INSERT = "INSERT INTO " + TABLE +
-      " VALUES(#{uid}, #{incId}, #{permId}, #{grant})";
+      "(uid, incId, entity, permId, `grant`)" +
+      " VALUES (#{uid}, #{incId}, #{entity}, #{permId}, #{grant}) ON DUPLICATE KEY" +
+      " UPDATE incId = #{incId}, entity = #{entity}, permId = #{permId}, `grant` = #{grant}";
+
+    static final String TRANSFER_PERM = "UPDATE " + TABLE +
+      " SET uid = #{newUid}" +
+      " WHERE uid = #{oldUid} AND incId = #{incId} AND entity = #{entity} AND permId = #{permId}";
+      
   }
 
   @Select(Sql.SELECT)
@@ -32,10 +40,15 @@ public interface AccountPermMapper {
   List<UserPerm> get(long uid);
 
   @Insert(Sql.INSERT)
-  int add(AccountPerm perms);
+  int add(AccountPerm perm);
+
+  @Update(Sql.TRANSFER_PERM)
+  int transfer(@Param("newUid") long newUid, @Param("oldUid") long oldUid,
+               @Param("incId") int incId, @Param("permId") long permId,
+               @Param("entity") String entity);
 
   @Delete(Sql.DELETE)
-  int delete(@Param("uid") long uid, @Param("incId") int incId, @Param("permId") long permId);
+  int delete(AccountPerm perm);
 
   @Delete(Sql.DELETE_ALL)
   int deleteAll(@Param("uid") long uid, @Param("incId") int incId);
