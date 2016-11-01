@@ -22,11 +22,11 @@ class UserInfo {
 
 public class XiaopLoginService extends LoginService {
   public static final String API =
-    "https://puboa.sogou-inc.com/moa/sylla/mapi/pns/auth?token={token}";
+    "http://puboa.sogou-inc.com/moa/sylla/mapi/pns/auth?token={token}";
 
-  RestTemplate rest;
+  private RestTemplate rest;
     
-  public XiaopLoginService(RestTemplate rest, JedisPool jedisPool) {
+  public XiaopLoginService(JedisPool jedisPool, RestTemplate rest) {
     super(jedisPool);
     this.rest = rest;
   }

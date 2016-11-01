@@ -26,6 +26,10 @@ public interface AccountMapper {
     final static String REVOKE_INCID_PERM = "UPDATE " + TABLE +
       " SET incId = #{incId}, perm = #{perm} WHERE id = #{id}";
 
+    final static String ADD_OPEN_USER = "INSERT INTO " + TABLE +
+      "(id, password, name, headImg) VALUES(#{id}, ROUND(RAND() * 1000000), #{name}, #{headImg}) " +
+      "ON DUPLICATE KEY UPDATE name = #{name}, headImg = #{headImg}";
+
     public static String insert(Account account) {
       SQL sql = new SQL().INSERT_INTO(TABLE);
       if (account.getPhone() != null) {
@@ -82,6 +86,10 @@ public interface AccountMapper {
   @InsertProvider(type = Sql.class, method = "insert")
   @Options(useGeneratedKeys=true, keyProperty = "id")
   int add(Account account);
+
+  @Insert(Sql.ADD_OPEN_USER)
+  int addOpenUser(@Param("id") long id, @Param("name") String name,
+                  @Param("headImg") String headImg);
 
   @UpdateProvider(type = Sql.class, method = "update")
   int update(Account account);

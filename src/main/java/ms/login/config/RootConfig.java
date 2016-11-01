@@ -90,7 +90,7 @@ public class RootConfig {
 
   @Bean
   public LoginServiceProvider loginServiceProvider() throws IOException {
-    XiaopLoginService xiaop = new XiaopLoginService(restTemplate(), jedisPool());
+    XiaopLoginService xiaop = new XiaopLoginService(jedisPool(), restTemplate());
 
     LoginServiceProvider provider = new LoginServiceProvider();
     provider.register(LoginServiceProvider.Name.XiaoP, xiaop);
