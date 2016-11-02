@@ -24,6 +24,14 @@ public class LoginServiceProvider {
     return null;    
   }
 
+  public static String openIdToEmail(String openId) {
+    if (openId.startsWith("xiaop_")) {
+      return openId.substring(6) + "@sogou-inc.com";
+    } else {
+      throw new RuntimeException("not implemented");
+    }
+  }
+
   public LoginService get(String openId) {
     Name name = getProvider(openId);
     return get(name);

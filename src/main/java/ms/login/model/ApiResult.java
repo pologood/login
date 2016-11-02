@@ -72,6 +72,10 @@ public class ApiResult<Data> {
     return new ApiResult(Errno.NOT_FOUND);
   }
 
+  public static ApiResult notFound(String msg) {
+    return new ApiResult(Errno.NOT_FOUND, msg);
+  }
+
   public static ApiResult notAccept(String msg) {
     return new ApiResult(Errno.NOT_ACCEPT, msg);
   }

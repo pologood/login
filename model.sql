@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS `permission`  (
   `entity`   VARCHAR(128),
   `permId`   BIGINT,
   `grant`    TINYINT(4),
-  UNIQUE(`uid`, `incId`, `permId`, `entity`)
+  UNIQUE(`uid`, `incId`, `permId`, `entity`),
+  INDEX(entity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `address` (

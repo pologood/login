@@ -169,8 +169,30 @@ public class PermController {
     return permManager.deleteFromInc(user.getIncId(), uid);
   }
 
+  @ApiMethod(description = "get account by entity")
+  @RequestMapping(value = "/perm/entity/{entity}", method = RequestMethod.GET)
+  public ApiResult getAccountByEntity(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "entity", description = "entity")
+    @PathVariable String entity) {
+
+    return permManager.getAccountByEntity(user, entity);
+  }  
+
   @ApiMethod(description = "transfer owner")
-  @RequestMapping(value = "/perm/owner/{entity}/{uid}", method = RequestMethod.POST)
+  @RequestMapping(value = "/perm/owner/{entity}/account/{account}", method = RequestMethod.POST)
+  public ApiResult transferOwner(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "entity", description = "entity")
+    @PathVariable String entity,
+    @ApiPathParam(name = "account", description = "user account")
+    @PathVariable String account) {
+
+    return permManager.grantOwner(user, account, entity);
+  }  
+
+  @ApiMethod(description = "transfer owner")
+  @RequestMapping(value = "/perm/owner/{entity}/user/{uid}", method = RequestMethod.POST)
   public ApiResult transferOwner(
     @AuthenticationPrincipal User user,
     @ApiPathParam(name = "entity", description = "entity")
@@ -179,6 +201,17 @@ public class PermController {
     @PathVariable long uid) {
 
     return permManager.grantOwner(user, uid, entity);
+  }
+
+  @ApiMethod(description = "Grant permission to Email/Phone")
+  @RequestMapping(value = "/perm/account/{account}", method = RequestMethod.PUT)
+  public ApiResult grantPerm(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "account", description = "user account")
+    @PathVariable String account,
+    @ApiQueryParam(name = "perms", description = "permission list")
+    @RequestParam List<String> perms) {
+    return permManager.grantPerm(user, account, -1, perms);
   }  
 
   @ApiMethod(description = "Grant permission")
@@ -191,6 +224,18 @@ public class PermController {
     @RequestParam List<String> perms) {
     return permManager.grantPerm(user, uid, -1, perms);
   }
+
+  @ApiMethod(description = "Revoke permission from Email/Phone")
+  @RequestMapping(value = "/perm/account/{account}", method = RequestMethod.DELETE)
+  public ApiResult revokePerm(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "account", description = "user account")
+    @PathVariable String account,
+    @ApiQueryParam(name = "perms", description = "permission list")
+    @RequestParam List<String> perms) {
+    
+    return permManager.revokePerm(user, account, -1, perms);    
+  }  
 
   @ApiMethod(description = "Revoke permission")
   @RequestMapping(value = "/perm/user/{uid}", method = RequestMethod.DELETE)

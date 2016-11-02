@@ -94,6 +94,18 @@ public class PermManager {
     return ApiResult.ok();
   }
 
+  private boolean isEmail(String account) {
+    return account.indexOf('@') != -1;
+  }
+
+  public ApiResult grantOwner(User user, String accountName, String entity) {
+    Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+      accountMapper.findByPhone(accountName);
+    if (account == null) return ApiResult.notFound("account not found");
+
+    return grantOwner(user, account.getId(), entity);
+  }
+
   public ApiResult grantOwner(User user, long uid, String entity) {
     if (uid == user.getUid()) return ApiResult.ok();
     
@@ -200,6 +212,23 @@ public class PermManager {
     return ApiResult.ok();
   }
 
+  public ApiResult getAccountByEntity(User user, String entity) {
+    boolean hasPerm = false;
+    List<AccountPerm> perms = accountPermMapper.getEntityUser(entity);
+    List<Account> accounts = new ArrayList<>();
+    for (AccountPerm perm : perms) {
+      if (user.getUid() == perm.getUid()) hasPerm = true;
+      Account account = accountMapper.find(perm.getUid());
+      if (account != null) {
+        account.setPerm(perm.getPermId());
+        accounts.add(account);
+      }
+    }
+
+    if (!hasPerm) return ApiResult.forbidden();
+    return new ApiResult<List>(accounts);      
+  }
+
   public void grantPermImpl(long uid, int incId, long permId, boolean option) {
     AccountPerm perm = new AccountPerm();
     perm.setUid(uid);
@@ -230,6 +259,15 @@ public class PermManager {
   }
 
   @Transactional
+  public ApiResult grantPerm(User user, String accountName, int incId, List<String> perms) {
+    Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+      accountMapper.findByPhone(accountName);
+    if (account == null) return ApiResult.notFound("account not found");
+
+    return grantPerm(user, account.getId(), incId, perms);
+  }
+
+  @Transactional
   public ApiResult grantPerm(User user, long uid, int incId, List<String> perms) {
     List<AccountPerm> uperms = parsePerms(perms);
     
@@ -253,6 +291,15 @@ public class PermManager {
 
     updateRememberMe(uid, accountPermMapper.get(uid));
     return ApiResult.ok();
+  }
+
+  @Transactional
+  public ApiResult revokePerm(User user, String accountName, int incId, List<String> perms) {
+    Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+      accountMapper.findByPhone(accountName);
+    if (account == null) return ApiResult.notFound("account not found");
+
+    return revokePerm(user, account.getId(), incId, perms);
   }
 
   @Transactional

@@ -27,8 +27,9 @@ public interface AccountMapper {
       " SET incId = #{incId}, perm = #{perm} WHERE id = #{id}";
 
     final static String ADD_OPEN_USER = "INSERT INTO " + TABLE +
-      "(id, password, name, headImg) VALUES(#{id}, ROUND(RAND() * 1000000), #{name}, #{headImg}) " +
-      "ON DUPLICATE KEY UPDATE name = #{name}, headImg = #{headImg}";
+      " (id, email, password, name, headImg)" +
+      " VALUES(#{id}, #{email}, ROUND(RAND() * 1000000), #{name}, #{headImg})" +
+      " ON DUPLICATE KEY UPDATE name = #{name}, headImg = #{headImg}";
 
     public static String insert(Account account) {
       SQL sql = new SQL().INSERT_INTO(TABLE);
@@ -88,8 +89,8 @@ public interface AccountMapper {
   int add(Account account);
 
   @Insert(Sql.ADD_OPEN_USER)
-  int addOpenUser(@Param("id") long id, @Param("name") String name,
-                  @Param("headImg") String headImg);
+  int addOpenUser(@Param("id") long id, @Param("email") String email,
+                  @Param("name") String name, @Param("headImg") String headImg);
 
   @UpdateProvider(type = Sql.class, method = "update")
   int update(Account account);

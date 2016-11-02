@@ -10,7 +10,10 @@ public interface AccountPermMapper {
   class Sql {
     static final String TABLE  = "permission";
     static final String SELECT = "SELECT * FROM " + TABLE + " WHERE uid = #{uid}";
-    static final String SELECT_PERM = "SELECT entity, permId FROM " + TABLE + " WHERE uid = #{uid}";
+    static final String SELECT_USER_PERM = "SELECT entity, permId FROM " + TABLE +
+      " WHERE uid = #{uid}";
+    static final String SELECT_ENTITY_USER = "SELECT * FROM " + TABLE +
+      " WHERE entity = #{entity}";
 
     static final String SELECT_ACCOUNT = "SELECT * FROM " + TABLE + " WHERE incId = #{incId}";
       
@@ -27,7 +30,6 @@ public interface AccountPermMapper {
     static final String TRANSFER_PERM = "UPDATE " + TABLE +
       " SET uid = #{newUid}" +
       " WHERE uid = #{oldUid} AND incId = #{incId} AND entity = #{entity} AND permId = #{permId}";
-      
   }
 
   @Select(Sql.SELECT)
@@ -36,8 +38,11 @@ public interface AccountPermMapper {
   @Select(Sql.SELECT_ACCOUNT)
   List<AccountPerm> getByIncId(int incId);
 
-  @Select(Sql.SELECT_PERM)
+  @Select(Sql.SELECT_USER_PERM)
   List<UserPerm> get(long uid);
+
+  @Select(Sql.SELECT_ENTITY_USER)
+  List<AccountPerm> getEntityUser(String entity);
 
   @Insert(Sql.INSERT)
   int add(AccountPerm perm);
