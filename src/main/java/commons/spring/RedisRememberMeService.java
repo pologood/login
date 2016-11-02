@@ -283,6 +283,7 @@ public class RedisRememberMeService implements RememberMeServices {
   }
 
   private Set<String> tokenPool = new HashSet<>();
+  private boolean     tokenInnerOnly = false;
   private JedisPool jedisPool;
   private String    domain;
   private int       maxAge;
@@ -296,16 +297,24 @@ public class RedisRememberMeService implements RememberMeServices {
   public RedisRememberMeService(JedisPool jedisPool, String domain, int maxAge) {
     this(jedisPool, "", domain, maxAge);
   }
+  
   public RedisRememberMeService(JedisPool jedisPool, String tokenPool, String domain, int maxAge) {
+    this(jedisPool, tokenPool, false, domain, maxAge);
+  }
+
+  public RedisRememberMeService(JedisPool jedisPool, String tokenPool, boolean tokenInnerOnly,
+                                String domain, int maxAge) {  
     this.jedisPool = jedisPool;
+    
     this.domain = domain;
     this.maxAge = maxAge;
 
+    this.tokenInnerOnly = tokenInnerOnly;
     for (String token : tokenPool.split(",")) {
       this.tokenPool.add(token);
     }
   }
-
+  
   // the cookie's expire is controlled by server, not cookie's expire attribute
   private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
     Cookie cookie = new Cookie(key, value);
@@ -422,6 +431,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
     if (queryString == null || !tokenPool.contains(queryString)) return null;
 
+    if (tokenInnerOnly && !"0".equals(request.getHeader("x-req-source"))) return null;
     return new RememberMeAuthenticationToken("N/A", internalUser, internalGrantedAuths);
   }
 

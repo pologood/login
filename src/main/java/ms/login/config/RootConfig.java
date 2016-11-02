@@ -84,8 +84,8 @@ public class RootConfig {
   public RedisRememberMeService rememberMeServices() {
     return new RedisRememberMeService(
       jedisPool(), env.getProperty("rest.tokenpool", ""),
-      env.getRequiredProperty("web.host"),
-      86400 * 7);
+      env.getProperty("rest.inner", Boolean.class, false),
+      env.getRequiredProperty("web.host"), 86400 * 7);
   }
 
   @Bean
