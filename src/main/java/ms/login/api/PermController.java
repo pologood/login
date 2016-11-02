@@ -225,6 +225,32 @@ public class PermController {
     return permManager.grantPerm(user, uid, -1, perms);
   }
 
+  @ApiMethod(description = "Alter permission of Email/Phone")
+  @RequestMapping(value = "/xperm/account/{account}", method = RequestMethod.PUT)
+  public ApiResult alterPerm(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "account", description = "user account")
+    @PathVariable String account,
+    @ApiQueryParam(name = "oldPerms", description = "old permission list")
+    @RequestParam List<String> oldPerms,
+    @ApiQueryParam(name = "newPerms", description = "new permission list")
+    @RequestParam List<String> newPerms) {
+    return permManager.alterPerm(user, account, -1, oldPerms, newPerms);
+  }  
+
+  @ApiMethod(description = "alter permission of Email/Phone")
+  @RequestMapping(value = "/xperm/user/{uid}", method = RequestMethod.PUT)
+  public ApiResult alterPerm(
+    @AuthenticationPrincipal User user,
+    @ApiPathParam(name = "uid", description = "user id")
+    @PathVariable long uid,
+    @ApiQueryParam(name = "oldPerms", description = "old permission list")
+    @RequestParam List<String> oldPerms,
+    @ApiQueryParam(name = "newPerms", description = "new permission list")
+    @RequestParam List<String> newPerms) {
+    return permManager.alterPerm(user, uid, -1, oldPerms, newPerms);
+  }
+
   @ApiMethod(description = "Revoke permission from Email/Phone")
   @RequestMapping(value = "/perm/account/{account}", method = RequestMethod.DELETE)
   public ApiResult revokePerm(

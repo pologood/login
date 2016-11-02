@@ -294,6 +294,22 @@ public class PermManager {
   }
 
   @Transactional
+  public ApiResult alterPerm(User user, String accountName, int incId,
+                             List<String> operms, List<String> nperms) {
+    Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
+      accountMapper.findByPhone(accountName);
+    if (account == null) return ApiResult.notFound("account not found");
+    return alterPerm(user, account.getId(), incId, operms, nperms);
+  }
+
+  @Transactional
+  public ApiResult alterPerm(User user, long uid, int incId,
+                             List<String> operms, List<String> nperms) {
+    ApiResult r = revokePerm(user, uid, incId, operms);
+    return r.getCode() == 0 ? grantPerm(user, uid, incId, nperms) : r;
+  }
+
+  @Transactional
   public ApiResult revokePerm(User user, String accountName, int incId, List<String> perms) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
