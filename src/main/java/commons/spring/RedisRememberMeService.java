@@ -164,6 +164,30 @@ public class RedisRememberMeService implements RememberMeServices {
     public List<UserPerm> getPerms() {
       return perms;
     }
+
+    public boolean hasPerm(String entity) {
+      if (perms == null) return false;
+      for (UserPerm perm : perms) {
+        if (entity.equals(perm.getEntity())) return true;
+      }
+      return false;
+    }
+
+    public List<String> getEntitys() {
+      List<String> entitys = new ArrayList<>();
+      for (UserPerm perm : perms) {
+        if (perm.getEntity() != null) entitys.add(perm.getEntity());
+      }
+      return entitys;
+    }
+
+    public List<Integer> getEntitysAsInt() {
+      List<Integer> entitys = new ArrayList<>();
+      for (UserPerm perm : perms) {
+        if (perm.getEntity() != null) entitys.add(Integer.parseInt(perm.getEntity()));
+      }
+      return entitys;
+    }      
     
     public String getPermsString() {
       if (perms == null) return "";
