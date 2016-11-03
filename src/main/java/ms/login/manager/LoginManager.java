@@ -319,7 +319,13 @@ public class LoginManager {
     if (account.getPerm() == Account.PERM_EXIST) {
       perms = accountPermMapper.get(account.getId());
     } else if (account.getPerm() != Long.MAX_VALUE) {
-      perms = Arrays.asList(new UserPerm(account.getPerm()));
+      if (permissionOn) {
+        perms = new ArrayList<>();
+        perms.add(new UserPerm(account.getPerm()));
+        perms.addAll(accountPermMapper.get(account.getId()));
+      } else {
+        perms = Arrays.asList(new UserPerm(account.getPerm()));
+      }
     } else if (permissionOn) {
       perms = accountPermMapper.get(account.getId());
     }
@@ -397,9 +403,15 @@ public class LoginManager {
     }
 
     if (xiaopUseUno && user.getId() > 0) {
-      u = new User(user.getId(), user.getOpenId(), user.getName());
-      String email = LoginServiceProvider.openIdToEmail(user.getOpenId());
-      accountMapper.addOpenUser(user.getId(), email, user.getName(), user.getHeadImg());
+      Account account = accountMapper.find(user.getId());
+      if (account != null) {
+        u = new User(user.getId(), user.getOpenId(), user.getName(),
+                     account.getIncId(), getPermIds(account));
+      } else {
+        u = new User(user.getId(), user.getOpenId(), user.getName());
+        String email = LoginServiceProvider.openIdToEmail(user.getOpenId());
+        accountMapper.addOpenUser(user.getId(), email, user.getName(), user.getHeadImg());
+      }
     }
 
     if (u == null) {
