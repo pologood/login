@@ -373,6 +373,7 @@ public class RedisRememberMeService implements RememberMeServices {
     
     if (response != null) {
       response.addCookie(newCookie("uid", null, 0, false));
+      response.addCookie(newCookie("openId", null, 0, false));
       response.addCookie(newCookie("token", null, 0, true));
     }
   }

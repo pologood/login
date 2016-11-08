@@ -405,10 +405,9 @@ public class LoginManager {
     if (xiaopUseUno && user.getId() > 0) {
       Account account = accountMapper.find(user.getId());
       if (account != null) {
-        u = new User(user.getId(), user.getOpenId(), user.getName(),
-                     account.getIncId(), getPermIds(account));
+        u = new User(user.getId(), user.getName(), account.getIncId(), getPermIds(account));
       } else {
-        u = new User(user.getId(), user.getOpenId(), user.getName());
+        u = new User(user.getId(), user.getName());
         String email = LoginServiceProvider.openIdToEmail(user.getOpenId());
         accountMapper.addOpenUser(user.getId(), email, user.getName(), user.getHeadImg());
       }
