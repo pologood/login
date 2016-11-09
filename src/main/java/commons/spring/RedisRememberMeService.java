@@ -207,17 +207,17 @@ public class RedisRememberMeService implements RememberMeServices {
     public boolean canGrantPerm(long permId, String entity) {
       if (perms == null) return false;
       for (UserPerm perm : perms) {
-        if (!perm.canGrantPerm(permId, entity)) return false;
+        if (perm.canGrantPerm(permId, entity)) return true;
       }
-      return true;
+      return false;
     }
 
     public boolean canRevokePerm(long permId, String entity) {
       if (perms == null) return false;
       for (UserPerm perm : perms) {
-        if (!perm.canRevokePerm(permId, entity)) return false;
+        if (perm.canRevokePerm(permId, entity)) return true;
       }
-      return true;
+      return false;
     }    
 
     public List<String> getEntitys() {
