@@ -56,6 +56,37 @@ public class RedisRememberMeService implements RememberMeServices {
       return permId;
     }
 
+    private boolean entityEqual(String entity) {
+      if (this.entity == null) {
+        return entity == null;
+      } else {
+        return this.entity.equals(entity);
+      }
+    }
+
+    public boolean canGrantPerm(long permId, String entity) {
+      boolean idOk;
+      if (this.permId <= 101) {  // Account.OWNER 101
+        idOk = this.permId < permId;
+      } else if (this.permId < 9_999) { // Account.PERM_EXIST 9_999
+        idOk = this.permId <= permId;
+      } else {
+        idOk = this.permId == permId;
+      }
+
+      boolean entityOk = entityEqual(entity);
+      return idOk && entityOk;   // TODO
+    }
+
+    public boolean canRevokePerm(long permId, String entity) {
+      boolean idOk = true;
+      if (this.permId < 9_999) {  // Account.PERM_EXIST 9_999
+        idOk = this.permId < permId;
+      }
+
+      return idOk && entityEqual(entity);
+    }
+
     public String toString() {
       return entity == null ? String.valueOf(permId) : String.valueOf(permId) + ":" + entity;
     }
@@ -172,6 +203,22 @@ public class RedisRememberMeService implements RememberMeServices {
       }
       return false;
     }
+
+    public boolean canGrantPerm(long permId, String entity) {
+      if (perms == null) return false;
+      for (UserPerm perm : perms) {
+        if (!perm.canGrantPerm(permId, entity)) return false;
+      }
+      return true;
+    }
+
+    public boolean canRevokePerm(long permId, String entity) {
+      if (perms == null) return false;
+      for (UserPerm perm : perms) {
+        if (!perm.canRevokePerm(permId, entity)) return false;
+      }
+      return true;
+    }    
 
     public List<String> getEntitys() {
       List<String> entitys = new ArrayList<>();

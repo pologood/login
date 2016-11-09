@@ -272,13 +272,10 @@ public class PermManager {
     List<AccountPerm> uperms = parsePerms(perms);
     
     if (user.getPerm() != Account.BOSS && !user.isInternal()) {
-      List<AccountPerm> userPerms = accountPermMapper.getAll(user.getUid());
       for (AccountPerm perm : uperms) {
-        boolean hasPerm = false;
-        for (AccountPerm userPerm : userPerms) {
-          if ((hasPerm = userPerm.canGrantPerm(perm))) break;
+        if (!user.canGrantPerm(perm.getPermId(), perm.getEntity())) {
+          return ApiResult.forbidden();
         }
-        if (!hasPerm) return ApiResult.forbidden();
       }
     }
 
@@ -323,13 +320,10 @@ public class PermManager {
     List<AccountPerm> uperms = parsePerms(perms);
 
     if (user.getPerm() != Account.BOSS && !user.isInternal()) {
-      List<AccountPerm> userPerms = accountPermMapper.getAll(user.getUid());
       for (AccountPerm perm : uperms) {
-        boolean hasPerm = false;
-        for (AccountPerm userPerm : userPerms) {
-          if ((hasPerm = userPerm.canRevokePerm(perm))) break;
+        if (!user.canRevokePerm(perm.getPermId(), perm.getEntity())) {
+          return ApiResult.forbidden();
         }
-        if (!hasPerm) return ApiResult.forbidden();
       }
     }
 
