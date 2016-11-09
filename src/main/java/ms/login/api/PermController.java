@@ -177,16 +177,19 @@ public class PermController {
     @PathVariable String entity) {
 
     return permManager.getAccountByEntity(user, entity);
-  }  
+  }
 
+  /* WARNINGS: account may something like me@google.com,
+   *  if put in request path, .com will be spring truncated
+   */
   @ApiMethod(description = "transfer owner")
-  @RequestMapping(value = "/perm/owner/{entity}/account/{account}", method = RequestMethod.POST)
+  @RequestMapping(value = "/perm/owner/{entity}/account", method = RequestMethod.POST)
   public ApiResult transferOwner(
     @AuthenticationPrincipal User user,
     @ApiPathParam(name = "entity", description = "entity")
     @PathVariable String entity,
-    @ApiPathParam(name = "account", description = "user account")
-    @PathVariable String account) {
+    @ApiQueryParam(name = "account", description = "user account")
+    @RequestParam String account) {
 
     return permManager.grantOwner(user, account, entity);
   }  
@@ -204,11 +207,11 @@ public class PermController {
   }
 
   @ApiMethod(description = "Grant permission to Email/Phone")
-  @RequestMapping(value = "/perm/account/{account}", method = RequestMethod.PUT)
+  @RequestMapping(value = "/perm/account", method = RequestMethod.PUT)
   public ApiResult grantPerm(
     @AuthenticationPrincipal User user,
-    @ApiPathParam(name = "account", description = "user account")
-    @PathVariable String account,
+    @ApiQueryParam(name = "account", description = "user account")
+    @RequestParam String account,
     @ApiQueryParam(name = "perms", description = "permission list")
     @RequestParam List<String> perms) {
     return permManager.grantPerm(user, account, -1, perms);
@@ -226,11 +229,11 @@ public class PermController {
   }
 
   @ApiMethod(description = "Alter permission of Email/Phone")
-  @RequestMapping(value = "/xperm/account/{account}", method = RequestMethod.PUT)
+  @RequestMapping(value = "/xperm/account", method = RequestMethod.PUT)
   public ApiResult alterPerm(
     @AuthenticationPrincipal User user,
-    @ApiPathParam(name = "account", description = "user account")
-    @PathVariable String account,
+    @ApiQueryParam(name = "account", description = "user account")
+    @RequestParam String account,
     @ApiQueryParam(name = "oldPerms", description = "old permission list")
     @RequestParam List<String> oldPerms,
     @ApiQueryParam(name = "newPerms", description = "new permission list")
@@ -252,11 +255,11 @@ public class PermController {
   }
 
   @ApiMethod(description = "Revoke permission from Email/Phone")
-  @RequestMapping(value = "/perm/account/{account}", method = RequestMethod.DELETE)
+  @RequestMapping(value = "/perm/account", method = RequestMethod.DELETE)
   public ApiResult revokePerm(
     @AuthenticationPrincipal User user,
-    @ApiPathParam(name = "account", description = "user account")
-    @PathVariable String account,
+    @ApiQueryParam(name = "account", description = "user account")
+    @RequestParam String account,
     @ApiQueryParam(name = "perms", description = "permission list")
     @RequestParam List<String> perms) {
     
