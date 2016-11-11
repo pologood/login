@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `incPerm`  (
   `incId`    INT(11),
   `name`     VARCHAR(64),
   `desc`     TEXT,
-  `createAt` TIMESTAMP,
+  `createTime` TIMESTAMP,
   INDEX(`incId`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10000000 DEFAULT CHARSET=utf8;
 
