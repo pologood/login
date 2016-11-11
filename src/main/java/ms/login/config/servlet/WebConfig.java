@@ -19,16 +19,18 @@ import ms.login.config.*;
 public class WebConfig extends WebMvcConfigurerAdapter {
   @Override
   public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-    converters.add(new StringHttpMessageConverter());
+    StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();
+    stringConverter.setWriteAcceptCharset(false);
+    converters.add(stringConverter);
+
     converters.add(new FormHttpMessageConverter());
-      
+
     Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
     builder.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     builder.featuresToDisable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     builder.serializationInclusion(JsonInclude.Include.NON_NULL);
+    builder.serializerByType(LocalDateTime.class, new LocalDateTimeJsonSerializer());
     converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
-
-//    converters.add(new CsvMessageConverter());
   }
 
   @Bean
