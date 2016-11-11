@@ -2,6 +2,7 @@ package ms.login.config.servlet;
 
 import java.io.*;
 import java.util.*;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.context.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import commons.utils.LocalDateTimeJsonSerializer;
 import ms.login.config.*;
 
 @Configuration
