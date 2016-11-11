@@ -23,8 +23,8 @@ public interface AccountPermMapper {
     static final String DELETE_ALL = "DELETE FROM " + TABLE + " WHERE uid = #{uid}";
 
     static final String INSERT = "INSERT INTO " + TABLE +
-      "(uid, incId, entity, permId, `grant`)" +
-      " VALUES (#{uid}, #{incId}, #{entity}, #{permId}, #{grant}) ON DUPLICATE KEY" +
+      "(uid, incId, entity, permId, `grant`, `createTime`)" +
+      " VALUES (#{uid}, #{incId}, #{entity}, #{permId}, #{grant}, NULL) ON DUPLICATE KEY" +
       " UPDATE incId = #{incId}, entity = #{entity}, permId = #{permId}, `grant` = #{grant}";
 
     static final String TRANSFER_PERM = "UPDATE " + TABLE +

@@ -221,6 +221,7 @@ public class PermManager {
       Account account = accountMapper.find(perm.getUid());
       if (account != null) {
         account.setPerm(perm.getPermId());
+        account.setCreateAt(perm.getUpdateTime());
         accounts.add(account);
       }
     }

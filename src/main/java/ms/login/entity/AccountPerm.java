@@ -1,23 +1,30 @@
 package ms.login.entity;
 
+import java.time.LocalDateTime;
 import org.jsondoc.core.annotation.*;
 
 @ApiObject(name = "AccountPerm", description = "account's permission")
 public class AccountPerm {
   @ApiObjectField(description = "account id")
-  long   uid;
+  private long   uid;
   
   @ApiObjectField(description = "corporation id")
-  long   incId;
+  private long   incId;
 
   @ApiObjectField(description = "permission entity")
-  String entity;
+  private String entity;
 
   @ApiObjectField(description = "permission id")
-  long   permId;
+  private long   permId;
 
   @ApiObjectField(description = "grant option")
-  boolean grant = false;
+  private boolean grant = false;
+
+  @ApiObjectField(name = "createTime", description = "create time")
+  private LocalDateTime createTime;
+
+  @ApiObjectField(name = "updateTime", description = "update time")
+  private LocalDateTime updateTime;
 
   public void setUid(long uid) {
     this.uid = uid;
@@ -52,6 +59,20 @@ public class AccountPerm {
   }
   public boolean getGrant() {
     return this.grant;
+  }
+
+  public void setCreateTime(LocalDateTime createTime) {
+    this.createTime = createTime;
+  }
+  public LocalDateTime getCreateTime() {
+    return this.createTime;
+  }
+
+  public void setUpdateTime(LocalDateTime updateTime) {
+    this.updateTime = updateTime;
+  }
+  public LocalDateTime getUpdateTime() {
+    return this.updateTime;
   }
 
   private boolean entityEqual(String entity) {

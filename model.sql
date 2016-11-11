@@ -31,11 +31,13 @@ CREATE TABLE IF NOT EXISTS `incPerm`  (
 ) ENGINE=InnoDB AUTO_INCREMENT=10000000 DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `permission`  (
-  `uid`      BIGINT,
-  `incId`    INT(11),
-  `entity`   VARCHAR(128),
-  `permId`   BIGINT,
-  `grant`    TINYINT(4),
+  `uid`        BIGINT,
+  `incId`      INT(11),
+  `entity`     VARCHAR(128),
+  `permId`     BIGINT,
+  `grant`      TINYINT(4),
+  `createTime` TIMESTAMP NOT NULL DEFAULT 0,
+  `updateTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE(`uid`, `incId`, `permId`, `entity`),
   INDEX(entity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
