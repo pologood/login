@@ -22,6 +22,7 @@ public class PermManager {
   @Autowired AccountPermMapper      accountPermMapper;
   @Autowired RedisRememberMeService rememberMeService;  
   @Autowired JedisPool              jedisPool;
+  @Autowired LoginManager           loginManager;
 
   public ApiResult getSysPerm() {
     List<SysPerm> perms = sysPermMapper.getAll();
@@ -90,7 +91,7 @@ public class PermManager {
   public ApiResult grantBoss(long uid, int incId) {
     int r = accountMapper.updateIncIdAndPerm(uid, incId, Account.BOSS);
     if (r <= 0) return new ApiResult(Errno.GRANT_BOSS_ERROR);
-    updateRememberMe(uid, null);
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 
@@ -120,8 +121,7 @@ public class PermManager {
     if (!isOwner) return ApiResult.forbidden();
 
     accountPermMapper.transfer(uid, user.getUid(), user.getIncId(), Account.OWNER, entity);
-    updateRememberMe(uid, accountPermMapper.get(uid));
-    updateRememberMe(uid, accountPermMapper.get(user.getUid()));
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 
@@ -143,15 +143,12 @@ public class PermManager {
     return new ApiResult<String>(code);
   }
 
-  void updateRememberMe(long uid, List<UserPerm> perms) {
+  void updateRememberMe(long uid) {
     Account account = accountMapper.find(uid);
     if (account == null) return;
-    
-    if (account.getPerm() == Account.BOSS) {
-      perms = Arrays.asList(new UserPerm(account.getPerm()));
-    }
-    rememberMeService.update(
-      new User(uid, account.getName(), account.getIncId(), perms));
+
+    List<UserPerm> perms = loginManager.getPermIds(account);
+    rememberMeService.update(new User(uid, account.getName(), account.getIncId(), perms));
   }
 
   public ApiResult getIncMember(int incId) {
@@ -197,18 +194,16 @@ public class PermManager {
     long permId = Long.parseLong(parts[2]);
     if (permId != -1) {
       grantPermImpl(uid, incId, permId, false);
-      updateRememberMe(uid, Arrays.asList(new UserPerm(permId)));      
-    } else {
-      updateRememberMe(uid, null);
     }
 
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 
   public ApiResult deleteFromInc(int incId, long uid) {
     accountPermMapper.deleteAll(uid, incId);
     accountMapper.revokeIncIdAndPerm(uid, Account.INC_NOTEXIST, Account.PERM_NOTEXIST);
-    updateRememberMe(uid, null);
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 
@@ -287,7 +282,7 @@ public class PermManager {
       accountPermMapper.add(perm);
     }
 
-    updateRememberMe(uid, accountPermMapper.get(uid));
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 
@@ -333,8 +328,8 @@ public class PermManager {
       perm.setIncId(incId);
       accountPermMapper.delete(perm);
     }
-    
-    updateRememberMe(uid, accountPermMapper.get(uid));
+
+    updateRememberMe(uid);
     return ApiResult.ok();
   }
 }
