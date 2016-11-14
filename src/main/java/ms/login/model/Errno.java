@@ -61,6 +61,9 @@ public class Errno {
   @ApiObjectField(description = "1106")
   public static final int INC_EXISTS              = 1106;
 
+  @ApiObjectField(description = "1107")
+  public static final int HIGH_PERM_EXISTS        = 1107;
+
   @ApiObjectField(description = "1200")
   public static final int OPEN_ACCESS_TOKEN_ERROR = 1200;
 
@@ -85,6 +88,7 @@ public class Errno {
     case INVALID_INVATATION_CODE: return "invalid invatation";
     case GRANT_BOSS_ERROR: return "uid not found or is in inc.";
     case INC_EXISTS: return "uid can only be belong to one inc.";
+    case HIGH_PERM_EXISTS: return "higher perm exists, the perm grant is useless";
 
     case OPEN_ACCESS_TOKEN_ERROR: return "get access token error";
     default: return "";

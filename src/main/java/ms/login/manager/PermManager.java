@@ -268,9 +268,18 @@ public class PermManager {
     List<AccountPerm> uperms = parsePerms(perms);
     
     if (user.getPerm() != Account.BOSS && !user.isInternal()) {
-      for (AccountPerm perm : uperms) {
-        if (!user.canGrantPerm(perm.getPermId(), perm.getEntity())) {
+      for (AccountPerm uperm : uperms) {
+        // grant option check is skipped
+        if (!user.canGrantPerm(uperm.getPermId(), uperm.getEntity())) {
           return ApiResult.forbidden();
+        }
+      }
+    }
+
+    for (AccountPerm perm : accountPermMapper.getAll(uid)) {
+      for (AccountPerm uperm : uperms) {
+        if (perm.canGrantPerm(uperm)) {
+          return new ApiResult(Errno.HIGH_PERM_EXISTS);
         }
       }
     }
