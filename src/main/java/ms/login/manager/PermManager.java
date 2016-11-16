@@ -122,6 +122,7 @@ public class PermManager {
 
     accountPermMapper.transfer(uid, user.getUid(), user.getIncId(), Account.OWNER, entity);
     updateRememberMe(uid);
+    updateRememberMe(user.getUid());
     return ApiResult.ok();
   }
 
