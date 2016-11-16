@@ -120,7 +120,8 @@ public class PermManager {
     }
     if (!isOwner) return ApiResult.forbidden();
 
-    accountPermMapper.transfer(uid, user.getUid(), user.getIncId(), Account.OWNER, entity);
+    int incId = user.getIncId() == 0 ? -1 : user.getIncId();
+    accountPermMapper.transfer(uid, user.getUid(), incId, Account.OWNER, entity);
     updateRememberMe(uid);
     updateRememberMe(user.getUid());
     return ApiResult.ok();
