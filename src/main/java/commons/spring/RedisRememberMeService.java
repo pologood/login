@@ -334,6 +334,7 @@ public class RedisRememberMeService implements RememberMeServices {
   private JedisPool jedisPool;
   private String    domain;
   private int       maxAge;
+  private List<String> excludeDomains;
   private static final String KEY_PREFIX   = "RedisRMS_";
   private static final User internalUser = User.internal();
   private static List<GrantedAuthority> internalGrantedAuths = Arrays.asList(
@@ -350,7 +351,12 @@ public class RedisRememberMeService implements RememberMeServices {
   }
 
   public RedisRememberMeService(JedisPool jedisPool, String tokenPool, boolean tokenInnerOnly,
-                                String domain, int maxAge) {  
+                                String domain, int maxAge) {
+    this(jedisPool, tokenPool, tokenInnerOnly, domain, "", maxAge);
+  }
+
+  public RedisRememberMeService(JedisPool jedisPool, String tokenPool, boolean tokenInnerOnly,
+                                String domain, String excludeDomain, int maxAge) {
     this.jedisPool = jedisPool;
     
     this.domain = domain;
@@ -360,10 +366,14 @@ public class RedisRememberMeService implements RememberMeServices {
     for (String token : tokenPool.split(",")) {
       this.tokenPool.add(token);
     }
+    this.excludeDomains = Arrays.asList(excludeDomain.split(","));
   }
-  
-  // the cookie's expire is controlled by server, not cookie's expire attribute
+
   private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
+    return newCookie(key, value, maxAge, httpOnly, domain);
+  }
+  // the cookie's expire is controlled by server, not cookie's expire attribute
+  private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly, String domain) {
     Cookie cookie = new Cookie(key, value);
     cookie.setPath("/");
     cookie.setDomain(domain);
@@ -406,9 +416,23 @@ public class RedisRememberMeService implements RememberMeServices {
         response.addCookie(newCookie("openId", user.getOpenId(), maxAge, false));
       }
       response.addCookie(newCookie("token", token, maxAge, true));
+
+      for (String excludeDomain : excludeDomains) {
+        logoutImpl(response, excludeDomain);
+      }
     }
 
     return token;    
+  }
+
+  private void logoutImpl(HttpServletResponse response) {
+    logoutImpl(response, domain);
+  }
+
+  private void logoutImpl(HttpServletResponse response, String domain) {
+    response.addCookie(newCookie("uid", null, 0, false, domain));
+    response.addCookie(newCookie("openId", null, 0, false, domain));
+    response.addCookie(newCookie("token", null, 0, true, domain));
   }
 
   public void logout(String id, HttpServletResponse response, boolean all) {
@@ -419,9 +443,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
     
     if (response != null) {
-      response.addCookie(newCookie("uid", null, 0, false));
-      response.addCookie(newCookie("openId", null, 0, false));
-      response.addCookie(newCookie("token", null, 0, true));
+      logoutImpl(response);
     }
   }
 
