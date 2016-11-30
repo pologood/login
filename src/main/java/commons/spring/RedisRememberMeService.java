@@ -418,7 +418,7 @@ public class RedisRememberMeService implements RememberMeServices {
       response.addCookie(newCookie("token", token, maxAge, true));
 
       for (String excludeDomain : excludeDomains) {
-        logoutImpl(response, excludeDomain);
+        // logoutImpl(response, excludeDomain);
       }
     }
 
