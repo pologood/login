@@ -411,15 +411,16 @@ public class RedisRememberMeService implements RememberMeServices {
     String token = cacheEntity.getCookieToken();
 
     if (response != null) {
+      // clear cookie must before set cookie
+      for (String excludeDomain : excludeDomains) {
+        logoutImpl(response, excludeDomain);
+      }
+
       response.addCookie(newCookie("uid", cacheEntity.uid, maxAge, false));
       if (user.getOpenId() != null) {
         response.addCookie(newCookie("openId", user.getOpenId(), maxAge, false));
       }
       response.addCookie(newCookie("token", token, maxAge, true));
-
-      for (String excludeDomain : excludeDomains) {
-        // logoutImpl(response, excludeDomain);
-      }
     }
 
     return token;    

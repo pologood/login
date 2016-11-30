@@ -86,7 +86,7 @@ public class RootConfig {
       jedisPool(), env.getProperty("rest.tokenpool", ""),
       env.getProperty("rest.inner", Boolean.class, false),
       env.getRequiredProperty("web.host"),
-      env.getRequiredProperty("web.host.exclude"),
+      env.getProperty("web.host.exclude", ""),
       86400 * 7);
   }
 
