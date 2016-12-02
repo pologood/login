@@ -366,7 +366,11 @@ public class RedisRememberMeService implements RememberMeServices {
     for (String token : tokenPool.split(",")) {
       this.tokenPool.add(token);
     }
-    this.excludeDomains = Arrays.asList(excludeDomain.split(","));
+    if (excludeDomain.isEmpty()) {
+      this.excludeDomains = new ArrayList<>();
+    } else {
+      this.excludeDomains = Arrays.asList(excludeDomain.split(","));
+    }
   }
 
   private Cookie newCookie(String key, String value, int maxAge, boolean httpOnly) {
