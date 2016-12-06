@@ -232,6 +232,7 @@ public class PermManager {
     perm.setUid(uid);
     perm.setIncId(incId);
     perm.setPermId(permId);
+    perm.setEntity("");
     perm.setGrant(option);
 
     accountPermMapper.add(perm);

@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS `incPerm`  (
 
 CREATE TABLE IF NOT EXISTS `permission`  (
   `uid`        BIGINT,
-  `incId`      INT(11),
-  `entity`     VARCHAR(128),
-  `permId`     BIGINT,
+  `incId`      INT(11) DEFAULT -1,
+  `entity`     VARCHAR(128) DEFAULT "", -- uniqe index on NULL cause duplicate
+  `permId`     BIGINT DEFAULT -1,
   `grant`      TINYINT(4),
   `createTime` TIMESTAMP NOT NULL DEFAULT 0,
   `updateTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
