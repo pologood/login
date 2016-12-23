@@ -20,7 +20,7 @@ public class PermManager {
   @Autowired SysPermMapper          sysPermMapper;
   @Autowired IncPermMapper          incPermMapper;
   @Autowired AccountPermMapper      accountPermMapper;
-  @Autowired RedisRememberMeService rememberMeService;  
+  @Autowired RedisRememberMeService rememberMeService;
   @Autowired JedisPool              jedisPool;
   @Autowired LoginManager           loginManager;
 
@@ -52,7 +52,7 @@ public class PermManager {
     SysPerm perm = new SysPerm();
     perm.setId(id);
     perm.setStatus(SysPerm.Status.DEPRESSED);
-    
+
     sysPermMapper.update(perm);
     return ApiResult.ok();
   }
@@ -109,7 +109,7 @@ public class PermManager {
 
   public ApiResult grantOwner(User user, long uid, String entity) {
     if (uid == user.getUid()) return ApiResult.ok();
-    
+
     List<UserPerm> uperms = user.getPerms();
     boolean isOwner = false;
     for (UserPerm perm : uperms) {
@@ -163,7 +163,7 @@ public class PermManager {
         if (account != null) {
           List<UserPerm> userPerms = new ArrayList<>();
           userPerms.add(new UserPerm(perm.getEntity(), perm.getPermId()));
-          
+
           account.setGrantPerms(userPerms);
           map.put(perm.getUid(), account);
         }
@@ -214,7 +214,7 @@ public class PermManager {
     List<AccountPerm> perms = accountPermMapper.getEntityUser(entity);
     List<Account> accounts = new ArrayList<>();
     for (AccountPerm perm : perms) {
-      if (user.getUid() == perm.getUid()) hasPerm = true;
+      if (user.getUid() == perm.getUid() || user.isPlatformAdmin()) hasPerm = true;
       Account account = accountMapper.find(perm.getUid());
       if (account != null) {
         account.setPerm(perm.getPermId());
@@ -224,7 +224,7 @@ public class PermManager {
     }
 
     if (!hasPerm) return ApiResult.forbidden();
-    return new ApiResult<List>(accounts);      
+    return new ApiResult<List>(accounts);
   }
 
   public void grantPermImpl(long uid, int incId, long permId, boolean option) {
@@ -242,7 +242,7 @@ public class PermManager {
     List<AccountPerm> uperms = new ArrayList<>();
     for (String perm : perms) {
       AccountPerm uperm = new AccountPerm();
-      
+
       String parts[] = perm.split(":");
       uperm.setPermId(Long.parseLong(parts[0]));
       if (parts.length >= 2) {
@@ -269,7 +269,7 @@ public class PermManager {
   @Transactional
   public ApiResult grantPerm(User user, long uid, int incId, List<String> perms) {
     List<AccountPerm> uperms = parsePerms(perms);
-    
+
     if (user.getPerm() != Account.BOSS && !user.isInternal()) {
       for (AccountPerm uperm : uperms) {
         // grant option check is skipped
