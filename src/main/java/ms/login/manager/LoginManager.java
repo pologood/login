@@ -34,13 +34,20 @@ public class LoginManager {
 
   private static final String LOGIN_ERROR_PREFIX = "LoginManagerLoginError_";
   private String smsRegisterTemplate;
+  private String smsLoginTemplate;
   private String tokenKey;
   private boolean xiaopUseUno;
   private boolean permissionOn;
 
+  public enum Action {
+    REGISTER, LOGIN;
+  }
+
   @Autowired
   public LoginManager(Environment env) {
     smsRegisterTemplate = env.getRequiredProperty("sms.register.template");
+    smsLoginTemplate = env.getProperty("sms.login.template");
+
     tokenKey = env.getProperty("security.token");
     xiaopUseUno = env.getProperty("login.xiaop.uno", Boolean.class, false);
     permissionOn = env.getProperty("permissionOn", Boolean.class, false);
@@ -90,17 +97,23 @@ public class LoginManager {
     }
     return Errno.OK;
   }
-      
+
   public byte[] getIdentifyingCode(String id) {
     return patchcaService.getPatchca(id);
   }
 
-  public ApiResult getRegisterCode(String account) {
+  public ApiResult getRegisterCode(String account, Action action) {
     int rand = ThreadLocalRandom.current().nextInt(100000, 999999);
     if (isEmail(account)) {
       throw new RuntimeException("not implemented");
     } else {
-      smsService.send(account, String.valueOf(rand), String.format(smsRegisterTemplate, rand));
+      String template = null;
+      if (action == Action.REGISTER) template = smsRegisterTemplate;
+      else if (action == Action.LOGIN) template = smsLoginTemplate;
+
+      if (template == null) return ApiResult.badRequest("not implemented");
+
+      smsService.send(account, String.valueOf(rand), String.format(template, rand));
     }
     return ApiResult.ok();
   }
@@ -177,12 +190,12 @@ public class LoginManager {
     account.setStatus(null);
     account.setPerm(Long.MAX_VALUE);
     accountMapper.update(account);
-    
+
     if (account.getName() != null) {
       user.setName(account.getName());
       rememberMeService.update(user);
     }
-    
+
     return ApiResult.ok();
   }
 
@@ -244,7 +257,7 @@ public class LoginManager {
         user.setUid(openAccount.getUid());
       }
     }
-    
+
     return new ApiResult<LoginService.User>(user);
   }
 
@@ -270,7 +283,7 @@ public class LoginManager {
 
   public ApiResult getAccount(long uid, LoginServiceProvider.Name provider) {
     List<OpenAccount> accounts = openAccountMapper.findByUid(uid);
-    
+
     OpenAccount account = null;
     for (OpenAccount a : accounts) {
       if (LoginServiceProvider.getProvider(a.getOpenId()) == provider) {
@@ -286,7 +299,7 @@ public class LoginManager {
       return new ApiResult<Map>(MapHelper.make("openId", account.getRawOpenId(), "token", token));
     } else {
       return ApiResult.notFound();
-    }    
+    }
   }
 
   ApiResult getAccountPermCheck(Account account, User user, Optional<String> token) {
@@ -338,18 +351,26 @@ public class LoginManager {
                          HttpServletResponse response) {
     int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
     if (errno != Errno.OK) return new ApiResult(errno);
-    
+
     Account account;
     if (isEmail(accountName)) {
       account = accountMapper.findByEmail(accountName);
     } else {
       account = accountMapper.findByPhone(accountName);
     }
-    
+
     if (account == null || !checkPassword(password, account.getPassword())) {
-      errno = logLoginError(accountName);
-      if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
-      return new ApiResult(account == null ? Errno.USER_NOT_FOUND : Errno.USER_PASSWORD_ERROR);
+      String code = smsService.get(accountName, password);
+      if (!password.equals(code)) {
+        errno = logLoginError(accountName);
+        if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
+
+        if (account == null) errno = Errno.USER_NOT_FOUND;
+        else if (code != null) errno = Errno.SMS_CODE_ERROR;
+        else errno = Errno.USER_PASSWORD_ERROR;
+
+        return new ApiResult(errno);
+      }
     }
 
     String token;
@@ -371,14 +392,14 @@ public class LoginManager {
       } else {
         u = new User(openId, user.getName(), account.getIncId(), getPermIds(account));
       }
-      
+
       token = rememberMeService.login(response, u);
     } else {
       token = rememberMeService.login(
         response, new User(account.getId(), account.getName(),
                            account.getIncId(), getPermIds(account)));
     }
-    
+
     return new ApiResult<String>(token);
   }
 
@@ -448,7 +469,7 @@ public class LoginManager {
     if (id == null) {
       return ApiResult.badRequest("invalid code");
     }
-    
+
     long uid = Long.parseLong(id);
     OpenAccount openAccount = new OpenAccount(user);
     openAccount.setUid(uid);
@@ -490,6 +511,6 @@ public class LoginManager {
     }
 
     rememberMeService.update(new User(openId, user.getName()));
-    return ApiResult.ok();    
+    return ApiResult.ok();
   }
 }

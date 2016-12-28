@@ -63,7 +63,7 @@ public class LoginController {
     Cookie cookie = new Cookie("idcodetoken", account.isPresent() ? account.get() : id.get());
     cookie.setMaxAge(60);
     response.addCookie(cookie);
-    
+
     os.write(img);
     return new ResponseEntity<Void>(HttpStatus.OK);
   }
@@ -72,8 +72,10 @@ public class LoginController {
   @RequestMapping(value = "/regcode", method = RequestMethod.GET)
   public ApiResult getRegisterCode(
     @ApiQueryParam(name = "account", description = "phone or email")
-    @RequestParam String account) {
-    return loginManager.getRegisterCode(account);
+    @RequestParam String account,
+    @ApiQueryParam(name = "action", description = "REGISTER(default)|LOGIN")
+    @RequestParam Optional<LoginManager.Action> action) {
+    return loginManager.getRegisterCode(account, action.orElse(LoginManager.Action.REGISTER));
   }
 
   @ApiMethod(description = "register account")
@@ -99,7 +101,7 @@ public class LoginController {
   @ApiMethod(description = "reset password, use regcode or oldPassword")
   @RequestMapping(value = "/password", method = RequestMethod.PUT)
   public ApiResult resetPassword(
-    @AuthenticationPrincipal RedisRememberMeService.User user,    
+    @AuthenticationPrincipal RedisRememberMeService.User user,
     @ApiQueryParam(name = "account", description = "phone OR email", required = false)
     @RequestParam Optional<String> account,
     @ApiQueryParam(name = "regcode", description = "register code", required = false)
@@ -145,7 +147,7 @@ public class LoginController {
         return ApiResult.badRequest("length(name) <= 16");
       }
     }
-      
+
     account.setId(user.getUid());
     return loginManager.updateAccount(user, account);
   }
@@ -157,7 +159,7 @@ public class LoginController {
     HttpServletResponse response) {
     return loginManager.deleteAccount(user.getUid(), response);
   }
-  
+
 
   @ApiMethod(description = "get account")
   @RequestMapping(value = "/account", method = RequestMethod.GET)
@@ -167,7 +169,7 @@ public class LoginController {
     @RequestParam Optional<Boolean> pcf) {
     return loginManager.getAccount(user, pcf.orElse(false));
   }
-  
+
   @ApiMethod(description = "get other user account")
   @RequestMapping(value = "/account/{account}", method = RequestMethod.GET)
   public ApiResult getAccount(
@@ -200,7 +202,7 @@ public class LoginController {
     @RequestParam LoginServiceProvider.Name provider) {
     if (!user.isInternal()) return ApiResult.forbidden();
     return loginManager.getAccount(uid, provider);
-  }  
+  }
 
   @ApiMethod(description = "login, phone OR email must provide one")
   @RequestMapping(value = "/login", method = RequestMethod.GET)
@@ -216,11 +218,11 @@ public class LoginController {
     @CookieValue(name = "idcodetoken", required = false) Optional<String> idc,
 
     @AuthenticationPrincipal RedisRememberMeService.User user,
-    @ApiQueryParam(name = "openId", description = "login and binding to openid") 
+    @ApiQueryParam(name = "openId", description = "login and binding to openid")
     @RequestParam Optional<String> openId,
-    @ApiQueryParam(name = "pcf", description = "pc first, default false") 
+    @ApiQueryParam(name = "pcf", description = "pc first, default false")
     @RequestParam Optional<Boolean> pcf,
-    
+
     HttpServletResponse response) {
 
     if (openId.isPresent()) {
@@ -229,7 +231,7 @@ public class LoginController {
         return ApiResult.unAuthorized();
       }
     }
-    
+
     if (!id.isPresent()) id = idc;
     return loginManager.login(account, password, id, idcode,
                               openId.orElse(null), pcf.orElse(false), response);
@@ -253,15 +255,15 @@ public class LoginController {
       return ApiResult.badRequest("token or encryptedData is required");
     }
   }
-  
+
   @ApiMethod(description = "xiaop oauth login")
   @RequestMapping(value = "/login/oauth/wx", method = RequestMethod.GET)
   public ApiResult login(
     @ApiQueryParam(name = "token", description = "oauth token")
     @RequestParam String token,
-    @ApiQueryParam(name = "pcf", description = "pc first, default false") 
+    @ApiQueryParam(name = "pcf", description = "pc first, default false")
     @RequestParam Optional<Boolean> pcf,
-    
+
     HttpServletResponse response) {
     return loginManager.login(token, pcf.orElse(false),
                               LoginServiceProvider.Name.WeiXin, response);
@@ -310,7 +312,7 @@ public class LoginController {
     @RequestParam String code) {
     return loginManager.applyBindOpenId(user.getId(), code);
   }
-  
+
 
   @ApiMethod(description = "accept openId bind")
   @RequestMapping(value = "/user/openId/{openId}", method = RequestMethod.PUT)
@@ -328,5 +330,5 @@ public class LoginController {
     @ApiPathParam(name = "openId", description = "the openId want to bind")
     @PathVariable String openId) {
     return loginManager.unbindOpenId(user.getUid(), openId);
-  } 
+  }
 }

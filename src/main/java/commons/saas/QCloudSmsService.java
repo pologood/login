@@ -17,7 +17,7 @@ import commons.spring.LooseGsonHttpMessageConverter;
 class Phone {
   public String nationcode;
   public String phone;
-  
+
   public Phone() {}
   public Phone(String phone) {
     this.phone = phone;

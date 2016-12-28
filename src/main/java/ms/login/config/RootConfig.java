@@ -34,7 +34,7 @@ public class RootConfig {
         env.getRequiredProperty("redis.url"),
         env.getRequiredProperty("redis.port", Integer.class));
     }
-  }  
+  }
 
   @Bean
   public PatchcaService patchcaService() {
@@ -53,12 +53,21 @@ public class RootConfig {
 
   @Bean
   public SmsService smsService() {
-    return new QCloudSmsService(
-      restTemplate(),
-      env.getRequiredProperty("sms.appid"),
-      env.getRequiredProperty("sms.appkey"),
-      jedisPool()
-      );
+    String provider = env.getRequiredProperty("sms.provider");
+    if (provider.equals("qcloud")) {
+      return new QCloudSmsService(
+        restTemplate(),
+        env.getRequiredProperty("sms.appid"),
+        env.getRequiredProperty("sms.appkey"),
+        jedisPool());
+    } else if (provider.equals("sogou")) {
+      return new SogouSmsService(
+        restTemplate(),
+        env.getRequiredProperty("sms.appid"),
+        jedisPool());
+    } else {
+      return null;
+    }
   }
 
   @Bean
@@ -72,7 +81,7 @@ public class RootConfig {
       new HttpComponentsClientHttpRequestFactory();
     factory.setConnectTimeout(Integer.parseInt(env.getProperty("rest.timeout.connect", "1000")));
     factory.setReadTimeout(Integer.parseInt(env.getProperty("rest.timeout.read", "10000")));
-    
+
     RestTemplate rest = new RestTemplate(factory);
     rest.setInterceptors(Arrays.asList(new RestTemplateFilter()));
     rest.getMessageConverters().add(new LooseGsonHttpMessageConverter());
@@ -108,7 +117,7 @@ public class RootConfig {
         env.getRequiredProperty("login.wx.appid"), env.getRequiredProperty("login.wx.secret"));
       provider.register(LoginServiceProvider.Name.WeiXin, wx);
     }
-    
+
     return provider;
   }
 }
