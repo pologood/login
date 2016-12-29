@@ -6,7 +6,7 @@ import redis.clients.jedis.JedisPool;
 
 public class SogouSmsService extends SmsService {
   @JsonIgnoreProperties(ignoreUnknown = true)
-  class SendSmsRespBody {
+  public static class SendSmsRespBody {
     public int    code;
     public String desc;
   }
