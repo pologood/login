@@ -210,7 +210,9 @@ public class LoginController {
     @ApiQueryParam(name = "account", description = "account phone or email")
     @RequestParam String account,
     @ApiQueryParam(name = "password", description = "account password")
-    @RequestParam String password,
+    @RequestParam Optional<String> password,
+    @ApiQueryParam(name = "smsCode", description = "sms code")
+    @RequestParam Optional<String> smsCode,
     @ApiQueryParam(name = "idcode", description = "when password wrong more than 3, need idcode")
     @RequestParam(required = false) Optional<String> idcode,
     @ApiQueryParam(name = "id", description = "if use id get idcode, use id here")
@@ -232,8 +234,12 @@ public class LoginController {
       }
     }
 
+    if (!password.isPresent() && !smsCode.isPresent()) {
+      return ApiResult.badRequest("password or smsCode is required");
+    }
+
     if (!id.isPresent()) id = idc;
-    return loginManager.login(account, password, id, idcode,
+    return loginManager.login(account, password.orElse(null), smsCode.orElse(null), id, idcode,
                               openId.orElse(null), pcf.orElse(false), response);
   }
 

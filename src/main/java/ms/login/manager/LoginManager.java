@@ -346,7 +346,7 @@ public class LoginManager {
     return perms;
   }
 
-  public ApiResult login(String accountName, String password, Optional<String> id,
+  public ApiResult login(String accountName, String password, String smsCode, Optional<String> id,
                          Optional<String> idcode, String openId, boolean pcf,
                          HttpServletResponse response) {
     int errno = checkPatchca(accountName, id.orElse(accountName), idcode);
@@ -359,18 +359,18 @@ public class LoginManager {
       account = accountMapper.findByPhone(accountName);
     }
 
-    if (account == null || !checkPassword(password, account.getPassword())) {
-      String code = smsService.get(accountName, password);
-      if (!password.equals(code)) {
-        errno = logLoginError(accountName);
-        if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
+    if (account == null ||
+        (password != null && !checkPassword(password, account.getPassword())) ||
+        (smsCode != null && !smsCode.equals(smsService.get(accountName, smsCode)))) {
 
-        if (account == null) errno = Errno.USER_NOT_FOUND;
-        else if (code != null) errno = Errno.SMS_CODE_ERROR;
-        else errno = Errno.USER_PASSWORD_ERROR;
+      errno = logLoginError(accountName);
+      if (errno != Errno.OK && !idcode.isPresent()) return new ApiResult(errno);
 
-        return new ApiResult(errno);
-      }
+      if (account == null) errno = Errno.USER_NOT_FOUND;
+      else if (smsCode != null) errno = Errno.SMS_CODE_ERROR;
+      else errno = Errno.USER_PASSWORD_ERROR;
+
+      return new ApiResult(errno);
     }
 
     String token;
