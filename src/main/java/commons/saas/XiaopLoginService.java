@@ -13,6 +13,7 @@ class HttpRet {
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class UserInfo {
+  public String uno;
   public String uid;
   public String name;
   public String tel;
@@ -25,7 +26,7 @@ public class XiaopLoginService extends LoginService {
     "http://puboa.sogou-inc.com/moa/sylla/mapi/pns/auth?token={token}";
 
   private RestTemplate rest;
-    
+
   public XiaopLoginService(JedisPool jedisPool, RestTemplate rest) {
     super(jedisPool);
     this.rest = rest;
@@ -34,22 +35,23 @@ public class XiaopLoginService extends LoginService {
   public String getName() {
     return "xiaop";
   }
-    
+
   protected User doLogin(String tmpToken) {
     HttpRet ret = rest.getForObject(API, HttpRet.class, tmpToken);
     if (ret.status != 0) return null;
-    
+
     LoginService.User user = new LoginService.User();
     user.setOpenId("xiaop_" + ret.data.uid);
     user.setName(ret.data.name);
     user.setHeadImg("https://puboa.sogou-inc.com/moa/sylla/mapi/portrait?uid=" + ret.data.uid);
+    user.setId(Integer.parseInt(ret.data.uno));
 
     HashMap<String, String> map = new HashMap<>();
     map.put("tel", ret.data.tel);
     map.put("dept", ret.data.dept);
     map.put("seat", ret.data.seat);
     user.setInfo(map);
-    
+
     return user;
   }
 }
