@@ -18,7 +18,7 @@ public class SogouSmsService extends SmsService {
     super(jedisPool);
     this.rest = rest;
     this.uri = "http://sms.sogou/portal/mobile/smsproxy.php?" +
-      "number={number}&desc={desc}&type=json&appid=" + appid;
+      "number={number}&desc={desc}&type=json&encode=utf8&appid=" + appid;
   }
 
   protected void sendInternal(String phone, String msg) {

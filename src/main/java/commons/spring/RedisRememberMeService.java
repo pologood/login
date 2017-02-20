@@ -200,7 +200,7 @@ public class RedisRememberMeService implements RememberMeServices {
     }
 
     public List<UserPerm> getPerms() {
-      return perms;
+      return perms == null ? Collections.emptyList() : perms;
     }
 
     public boolean hasPerm(String entity) {
