@@ -22,18 +22,12 @@ public class RootConfig {
 
   @Bean
   public JedisPool jedisPool() {
-    String pass = env.getProperty("redis.pass");
-    if (pass != null) {
-      return new JedisPool(
-        new JedisPoolConfig(),
-        env.getRequiredProperty("redis.url"),
-        env.getRequiredProperty("redis.port", Integer.class),
-        2, pass);  // 2 second
-    } else {
-      return new JedisPool(
-        env.getRequiredProperty("redis.url"),
-        env.getRequiredProperty("redis.port", Integer.class));
-    }
+    return new JedisPool(
+      new JedisPoolConfig(),
+      env.getRequiredProperty("redis.url"),
+      env.getRequiredProperty("redis.port", Integer.class),
+      200,  // default timeout 2000 millisecond is too long, set to 200
+      env.getProperty("redis.pass"));  // if null, ignore pass
   }
 
   @Bean
