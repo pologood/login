@@ -408,7 +408,9 @@ public class RedisRememberMeService implements RememberMeServices {
   }
 
   public void setCookiePrefix(String cookiePrefix) {
-    this.cookiePrefix = cookiePrefix;
+    if (cookiePrefix != null && !cookiePrefix.isEmpty()) {
+      this.cookiePrefix = cookiePrefix;
+    }
   }
 
   private String cookieKey(String key) {
