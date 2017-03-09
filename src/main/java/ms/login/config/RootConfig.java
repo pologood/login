@@ -85,12 +85,13 @@ public class RootConfig {
 
   @Bean
   public RedisRememberMeService rememberMeServices() {
-    return new RedisRememberMeService(
+    RedisRememberMeService rms = new RedisRememberMeService(
       jedisPool(), env.getProperty("rest.tokenpool", ""),
       env.getProperty("rest.inner", Boolean.class, false),
       env.getRequiredProperty("web.host"),
       env.getProperty("web.host.exclude", ""),
       86400 * 7);
+    rms.setCookiePrefix(env.getProperty("login.cookieprefix", ""));
   }
 
   @Bean
