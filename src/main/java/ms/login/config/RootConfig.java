@@ -92,6 +92,7 @@ public class RootConfig {
       env.getProperty("web.host.exclude", ""),
       86400 * 7);
     rms.setCookiePrefix(env.getProperty("login.cookieprefix", ""));
+    return rms;
   }
 
   @Bean
