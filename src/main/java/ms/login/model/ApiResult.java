@@ -1,10 +1,12 @@
 package ms.login.model;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.http.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.jsondoc.core.annotation.*;
+import org.springframework.http.CacheControl;
 import org.springframework.validation.*;
 import org.springframework.web.context.request.*;
 
@@ -18,7 +20,7 @@ public class ApiResult<Data> {
 
   @ApiObjectField(description = "payload")
   @JsonInclude(Include.NON_NULL)
-  Data data;  
+  Data data;
 
   public ApiResult() {
     this(Errno.OK);
@@ -26,6 +28,12 @@ public class ApiResult<Data> {
 
   public ApiResult(int code) {
     this(code, Errno.getMessage(code));
+  }
+
+  public static HttpServletResponse getHttpServletRespons() {
+    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+                                  .getRequestAttributes()).getRequest();
+    return (HttpServletResponse) request.getAttribute("response__");
   }
 
   void setErrorHint() {
@@ -47,7 +55,7 @@ public class ApiResult<Data> {
   public ApiResult(Data data) {
     this(Errno.OK, Errno.getMessage(Errno.OK), data);
   }
-  
+
   public ApiResult(int code, Data data) {
     this(code, Errno.getMessage(code), data);
   }
@@ -67,7 +75,7 @@ public class ApiResult<Data> {
   public static ApiResult forbidden() {
     return new ApiResult(Errno.FORBIDDEN);
   }
-  
+
   public static ApiResult notFound() {
     return new ApiResult(Errno.NOT_FOUND);
   }
@@ -94,7 +102,7 @@ public class ApiResult<Data> {
 
   public static Errno.BadRequestException badRequestException() {
     return new Errno.BadRequestException();
-  }  
+  }
 
   public static ApiResult bindingResult(BindingResult bindingResult) {
     Map<String, String> map = new HashMap<>();
@@ -103,12 +111,12 @@ public class ApiResult<Data> {
     }
     return new ApiResult<Map>(Errno.BAD_REQUEST, map);
   }
-  
+
   public ApiResult(int code, String message, Data data) {
     this.code = code;
     this.message = message;
     this.data = data;
-  }  
+  }
 
   public int getCode() {
     return code;
@@ -129,5 +137,13 @@ public class ApiResult<Data> {
   }
   public void setData(Data data) {
     this.data = data;
+  }
+
+  public void setCacheControl(int second) {
+    HttpServletResponse response = getHttpServletRespons();
+    if (response == null) return;
+
+    CacheControl cc = CacheControl.maxAge(second, TimeUnit.SECONDS).cachePrivate();
+    response.setHeader("Cache-Control", cc.getHeaderValue());
   }
 }

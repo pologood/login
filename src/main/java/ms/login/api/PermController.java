@@ -147,7 +147,7 @@ public class PermController {
   public ApiResult getIncMember(@AuthenticationPrincipal User user) {
     return permManager.getIncMember(user.getIncId());
   }
-  
+
 
   @ApiMethod(description = "Invite uid Join Corporation")
   @RequestMapping(value = "/inc/user", method = RequestMethod.PUT)
@@ -164,7 +164,7 @@ public class PermController {
     @AuthenticationPrincipal User user,
     @ApiPathParam(name = "uid", description = "user id")
     @PathVariable long uid) {
-    
+
     if (!user.isBoss()) return ApiResult.forbidden();
     return permManager.deleteFromInc(user.getIncId(), uid);
   }
@@ -177,6 +177,17 @@ public class PermController {
     @PathVariable String entity) {
 
     return permManager.getAccountByEntity(user, entity);
+  }
+
+  @ApiMethod(description = "get all account's all entity")
+  @RequestMapping(value = "/perms", method = RequestMethod.GET)
+  public ApiResult getAllPerms(@AuthenticationPrincipal User user) {
+    if (!user.isPlatformAdmin() && !user.isInternal()) {
+      return ApiResult.forbidden();
+    }
+    ApiResult rc = permManager.getAllPerms();
+    if (rc.getCode() == 0) rc.setCacheControl(60);
+    return rc;
   }
 
   /* WARNINGS: account may something like me@google.com,
@@ -192,7 +203,7 @@ public class PermController {
     @RequestParam String account) {
 
     return permManager.grantOwner(user, account, entity);
-  }  
+  }
 
   @ApiMethod(description = "transfer owner")
   @RequestMapping(value = "/perm/owner/{entity}/user/{uid}", method = RequestMethod.POST)
@@ -215,7 +226,7 @@ public class PermController {
     @ApiQueryParam(name = "perms", description = "permission list")
     @RequestParam List<String> perms) {
     return permManager.grantPerm(user, account, -1, perms);
-  }  
+  }
 
   @ApiMethod(description = "Grant permission")
   @RequestMapping(value = "/perm/user/{uid}", method = RequestMethod.PUT)
@@ -239,7 +250,7 @@ public class PermController {
     @ApiQueryParam(name = "newPerms", description = "new permission list")
     @RequestParam List<String> newPerms) {
     return permManager.alterPerm(user, account, -1, oldPerms, newPerms);
-  }  
+  }
 
   @ApiMethod(description = "alter permission of Email/Phone")
   @RequestMapping(value = "/xperm/user/{uid}", method = RequestMethod.PUT)
@@ -262,9 +273,9 @@ public class PermController {
     @RequestParam String account,
     @ApiQueryParam(name = "perms", description = "permission list")
     @RequestParam List<String> perms) {
-    
-    return permManager.revokePerm(user, account, -1, perms);    
-  }  
+
+    return permManager.revokePerm(user, account, -1, perms);
+  }
 
   @ApiMethod(description = "Revoke permission")
   @RequestMapping(value = "/perm/user/{uid}", method = RequestMethod.DELETE)
@@ -274,7 +285,7 @@ public class PermController {
     @PathVariable long uid,
     @ApiQueryParam(name = "perms", description = "permission list")
     @RequestParam List<String> perms) {
-    
-    return permManager.revokePerm(user, uid, -1, perms);    
+
+    return permManager.revokePerm(user, uid, -1, perms);
   }
 }

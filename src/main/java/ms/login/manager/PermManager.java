@@ -1,6 +1,7 @@
 package ms.login.manager;
 
 import java.util.*;
+import java.util.stream.*;
 import redis.clients.jedis.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -224,6 +225,28 @@ public class PermManager {
     }
 
     if (!hasPerm) return ApiResult.forbidden();
+    return new ApiResult<List>(accounts);
+  }
+
+  public ApiResult getAllPerms() {
+    List<AccountPerm> perms = accountPermMapper.dump();
+
+    Collector<AccountPerm, ?, List<UserPerm>> collector = Collector.of(
+      ArrayList::new, (list, o) -> list.add(new UserPerm(o.getEntity(), o.getPermId())),
+      (left, right) -> { left.addAll(right); return left; });
+
+    Map<Long, List<UserPerm>> map = perms.stream()
+      .collect(Collectors.groupingBy(AccountPerm::getUid, collector));
+
+    List<Account> accounts = new ArrayList<>();
+    for (Map.Entry<Long, List<UserPerm>> entry : map.entrySet()) {
+      Account account = accountMapper.find(entry.getKey());
+      if (account != null) {
+        account.setGrantPerms(entry.getValue());
+        accounts.add(account);
+      }
+    }
+
     return new ApiResult<List>(accounts);
   }
 

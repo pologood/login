@@ -14,12 +14,13 @@ public interface AccountPermMapper {
       " WHERE uid = #{uid}";
     static final String SELECT_ENTITY_USER = "SELECT * FROM " + TABLE +
       " WHERE entity = #{entity}";
+    static final String DUMP = "SELECT * FROM " + TABLE;
 
     static final String SELECT_ACCOUNT = "SELECT * FROM " + TABLE + " WHERE incId = #{incId}";
-      
+
     static final String DELETE = "DELETE FROM " + TABLE +
       " WHERE uid = #{uid} AND incId = #{incId} AND entity = #{entity} AND permId = #{permId}";
-    
+
     static final String DELETE_ALL = "DELETE FROM " + TABLE + " WHERE uid = #{uid}";
 
     static final String INSERT = "INSERT INTO " + TABLE +
@@ -31,6 +32,9 @@ public interface AccountPermMapper {
       " SET uid = #{newUid}" +
       " WHERE uid = #{oldUid} AND incId = #{incId} AND entity = #{entity} AND permId = #{permId}";
   }
+
+  @Select(Sql.DUMP)
+  List<AccountPerm> dump();
 
   @Select(Sql.SELECT)
   List<AccountPerm> getAll(long uid);
