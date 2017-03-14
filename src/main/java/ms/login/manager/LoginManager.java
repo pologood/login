@@ -168,7 +168,12 @@ public class LoginManager {
       else return new ApiResult(Errno.SMS_CODE_ERROR);
     }
 
-    accountMapper.updatePasswordByPhone(accountName, encodePassword(password));
+    int r = accountMapper.updatePasswordByPhone(accountName, encodePassword(password));
+    if (r > 0) {
+      Account account = accountMapper.findByPhone(accountName);
+      if (account != null) rememberMeService.logout(String.valueOf(account.getId()), null, true);
+    }
+
     return ApiResult.ok();
   }
 
@@ -179,7 +184,7 @@ public class LoginManager {
 
     if (checkPassword(oldPassword, account.getPassword())) {
       accountMapper.updatePasswordById(user.getUid(), encodePassword(password));
-      String token = rememberMeService.login(response, user);
+      String token = rememberMeService.login(response, user, true);
       return new ApiResult<String>(token);
     } else {
       return new ApiResult(Errno.USER_PASSWORD_ERROR);
