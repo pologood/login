@@ -215,7 +215,7 @@ public class PermManager {
     List<AccountPerm> perms = accountPermMapper.getEntityUser(entity);
     List<Account> accounts = new ArrayList<>();
     for (AccountPerm perm : perms) {
-      if (user.getUid() == perm.getUid() || user.isPlatformAdmin()) hasPerm = true;
+      if (user.isPlatformAdmin() || user.getUid() == perm.getUid()) hasPerm = true;
       Account account = accountMapper.find(perm.getUid());
       if (account != null) {
         account.setPerm(perm.getPermId());
