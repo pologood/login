@@ -102,10 +102,13 @@ public class RootConfig {
     LoginServiceProvider provider = new LoginServiceProvider();
     provider.register(LoginServiceProvider.Name.XiaoP, xiaop);
 
-    ClassPathResource resource = new ClassPathResource(env.getRequiredProperty("xiaop.publickey"));
-    XiaopLocalLoginService xiaopl = new XiaopLocalLoginService(
-      resource.getFile().getPath(), jedisPool());
-    provider.register(LoginServiceProvider.Name.XiaoPLocal, xiaopl);
+    String xiaopPublicKey = env.getProperty("xiaop.publickey");
+    if (xiaopPublicKey != null) {
+      ClassPathResource resource = new ClassPathResource(xiaopPublicKey);
+      XiaopLocalLoginService xiaopl = new XiaopLocalLoginService(
+        resource.getFile().getPath(), jedisPool());
+      provider.register(LoginServiceProvider.Name.XiaoPLocal, xiaopl);
+    }
 
     if (env.getProperty("login.wx.appid") != null) {
       WxLoginService wx = new WxLoginService(

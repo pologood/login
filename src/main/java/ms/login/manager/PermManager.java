@@ -121,7 +121,7 @@ public class PermManager {
     }
     if (!isOwner) return ApiResult.forbidden();
 
-    int incId = user.getIncId() == 0 ? -1 : user.getIncId();
+    int incId = user.getIncId() <= 0 ? -1 : user.getIncId();
     accountPermMapper.transfer(uid, user.getUid(), incId, Account.OWNER, entity);
     updateRememberMe(uid);
     updateRememberMe(user.getUid());

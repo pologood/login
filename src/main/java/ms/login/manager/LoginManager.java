@@ -38,6 +38,7 @@ public class LoginManager {
   private String tokenKey;
   private boolean xiaopUseUno;
   private boolean permissionOn;
+  private boolean regcodeUsePatchca;
 
   public enum Action {
     REGISTER, LOGIN;
@@ -51,6 +52,8 @@ public class LoginManager {
     tokenKey = env.getProperty("security.token");
     xiaopUseUno = env.getProperty("login.xiaop.uno", Boolean.class, false);
     permissionOn = env.getProperty("permissionOn", Boolean.class, false);
+
+    regcodeUsePatchca = env.getProperty("login.regcode.patcha", Boolean.class, false);
   }
 
   private boolean isEmail(String account) {
@@ -102,7 +105,17 @@ public class LoginManager {
     return patchcaService.getPatchca(id);
   }
 
-  public ApiResult getRegisterCode(String account, Action action) {
+  public ApiResult getRegisterCode(String account, Action action,
+                                   Optional<String> id, Optional<String> idcode) {
+    if (regcodeUsePatchca) {
+      if (!id.isPresent() || !idcode.isPresent()) {
+        return new ApiResult(Errno.IDENTIFY_CODE_REQUIRED);
+      }
+      if (!patchcaService.checkText(id.get(), idcode.get())) {
+        return new ApiResult(Errno.IDENTIFY_CODE_ERROR);
+      }
+    }
+
     int rand = ThreadLocalRandom.current().nextInt(100000, 999999);
     if (isEmail(account)) {
       throw new RuntimeException("not implemented");

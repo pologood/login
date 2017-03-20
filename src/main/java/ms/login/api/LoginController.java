@@ -74,8 +74,13 @@ public class LoginController {
     @ApiQueryParam(name = "account", description = "phone or email")
     @RequestParam String account,
     @ApiQueryParam(name = "action", description = "REGISTER(default)|LOGIN")
-    @RequestParam Optional<LoginManager.Action> action) {
-    return loginManager.getRegisterCode(account, action.orElse(LoginManager.Action.REGISTER));
+    @RequestParam Optional<LoginManager.Action> action,
+    @ApiQueryParam(name = "idcode", description = "identify code")
+    @RequestParam Optional<String> idcode,
+    @CookieValue(name = "idcodetoken", required = false) Optional<String> id) {
+
+    return loginManager.getRegisterCode(
+      account, action.orElse(LoginManager.Action.REGISTER), id, idcode);
   }
 
   @ApiMethod(description = "register account")
