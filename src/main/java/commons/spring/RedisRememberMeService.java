@@ -596,6 +596,7 @@ public class RedisRememberMeService implements RememberMeServices {
       }
     }
 
+    request.setAttribute("RmsUid", user.getId());
     return new RememberMeAuthenticationToken("N/A", user, grantedAuths);
   }
 

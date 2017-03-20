@@ -26,7 +26,7 @@ public class LoggerFilter implements Filter {
       def = "true";
     }
 
-    logHttpGet    = Boolean.parseBoolean(env.getProperty("logfilter.get", def));
+    logHttpGet    = Boolean.parseBoolean(env.getProperty("logfilter.get", "false"));
     logHttpPost   = Boolean.parseBoolean(env.getProperty("logfilter.post", def));
     logHttpPut    = Boolean.parseBoolean(env.getProperty("logfilter.put", def));
     logHttpDelete = Boolean.parseBoolean(env.getProperty("logfilter.delete", def));
@@ -54,7 +54,7 @@ public class LoggerFilter implements Filter {
   }
 
   @ManagedAttribute(description="The logHttpPut Attribute", defaultValue="false")
-  public boolean setLogHttpPut() {
+  public boolean getLogHttpPut() {
     return this.logHttpPut;
   }
   
@@ -105,6 +105,9 @@ public class LoggerFilter implements Filter {
            contentType.startsWith("text/plain"))) {
         return true;
       }
+
+      int len = req.getContentLength();
+      if (len == 0) return true;
     }
     return false;
   }
@@ -160,7 +163,12 @@ public class LoggerFilter implements Filter {
       if (queryStr == null) queryStr = "-";
 
       if (respBody == null) respBody = "-";
-      logger.warn("{} {} {} {} {}", method, req.getRequestURI(), queryStr, reqBody, respBody);
+
+      String userId = (String) request.getAttribute("RmsUid");
+      if (userId == null) userId = "-";
+        
+      logger.warn("{} {} {} {} {} {}", method, req.getRequestURI(), queryStr,
+                  userId, reqBody, respBody);
     }
   }
 
