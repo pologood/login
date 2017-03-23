@@ -18,21 +18,21 @@ public class XiaopLocalLoginService extends LoginService {
   }
 
   private PublicKey publicKey;
-  
+
   public XiaopLocalLoginService(String publicKeyFile, JedisPool jedisPool) {
     super(jedisPool);
 
     try {
       byte[] content = getPublicKeyByte(Files.readAllBytes(Paths.get(publicKeyFile)));
-    
+
       byte[] keyBytes = Base64.getDecoder().decode(content);
       X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
       KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-    
+
       this.publicKey = keyFactory.generatePublic(spec);
     } catch (Exception e) {
       throw new RuntimeException(e);
-    }    
+    }
   }
 
   private static byte[] getPublicKeyByte(byte[] input) {
@@ -52,16 +52,16 @@ public class XiaopLocalLoginService extends LoginService {
       else if (!skip) output[j++] = input[i];
     }
     return output;
-  }  
+  }
 
   public String getName() {
     return "xiaop";
   }
-    
+
   protected User doLogin(String encryptedData) {
     try {
       byte[] data = Base64.getDecoder().decode(encryptedData);
-      
+
       Cipher decrypt = Cipher.getInstance("RSA");
       decrypt.init(Cipher.DECRYPT_MODE, publicKey);
       String json = new String(decrypt.doFinal(data), "UTF-8");
@@ -71,7 +71,13 @@ public class XiaopLocalLoginService extends LoginService {
       user.setOpenId("xiaop_" + info.uid);
       user.setName(info.name);
       user.setHeadImg("https://puboa.sogou-inc.com/moa/sylla/mapi/portrait?uid=" + info.uid);
-      user.setId(Integer.parseInt(info.uno));
+
+      if (info.uno.startsWith("OS")) {
+        user.setId(9990000 + Integer.parseInt(info.uno.substring(2)));
+      } else {
+        user.setId(Integer.parseInt(info.uno));
+      }
+
       return user;
     } catch (Exception e) {
       throw new RuntimeException(e);

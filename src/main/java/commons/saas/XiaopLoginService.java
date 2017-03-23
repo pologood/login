@@ -44,7 +44,12 @@ public class XiaopLoginService extends LoginService {
     user.setOpenId("xiaop_" + ret.data.uid);
     user.setName(ret.data.name);
     user.setHeadImg("https://puboa.sogou-inc.com/moa/sylla/mapi/portrait?uid=" + ret.data.uid);
-    user.setId(Integer.parseInt(ret.data.uno));
+
+    if (ret.data.uno.startsWith("OS")) {
+      user.setId(9990000 + Integer.parseInt(ret.data.uno.substring(2)));
+    } else {
+      user.setId(Integer.parseInt(ret.data.uno));
+    }
 
     HashMap<String, String> map = new HashMap<>();
     map.put("tel", ret.data.tel);
