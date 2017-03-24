@@ -294,10 +294,14 @@ public class PermManager {
   private Account addAccountAnyWay(String accountName) {
     Account account = new Account();
 
-    if (isEmail(accountName)) account.setEmail(accountName);
-    else account.setPhone(accountName);
-
-    account.setName("anonymous");
+    int idx = accountName.indexOf('@');
+    if (idx != -1) {
+      account.setEmail(accountName);
+      account.setName(accountName.substring(0, idx));
+    } else {
+      account.setPhone(accountName);
+      account.setName("anonymous");
+    }
     account.setPassword("0");
     accountMapper.add(account);  // ignore race condition
     return account;
