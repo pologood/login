@@ -441,15 +441,14 @@ public class LoginManager {
       }
     }
 
-    if (xiaopUseUno && user.getId() > 0) {
-      Account account = accountMapper.find(user.getId());
-      if (account != null) {
-        u = new User(user.getId(), user.getName(), account.getIncId(), getPermIds(account));
-      } else {
-        u = new User(user.getId(), user.getName());
-        String email = LoginServiceProvider.openIdToEmail(user.getOpenId());
-        accountMapper.addOpenUser(user.getId(), email, user.getName(), user.getHeadImg());
-      }
+    if (xiaopUseUno) {
+      String email = LoginServiceProvider.openIdToEmail(user.getOpenId());
+
+      // update OpenUser account anyway
+      accountMapper.addOpenUserByEmail(user.getId(), email, user.getName(), user.getHeadImg());
+
+      Account account = accountMapper.findByEmail(email);
+      u = new User(account.getId(), account.getName(), account.getIncId(), getPermIds(account));
     }
 
     if (u == null) {

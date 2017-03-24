@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.*;
 import redis.clients.jedis.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.*;
 import org.springframework.http.*;
@@ -24,6 +25,13 @@ public class PermManager {
   @Autowired RedisRememberMeService rememberMeService;
   @Autowired JedisPool              jedisPool;
   @Autowired LoginManager           loginManager;
+
+  private boolean addNotFoundAccount = false;
+
+  @Autowired
+  public PermManager(Environment env) {
+    addNotFoundAccount = env.getProperty("perm.add.account", Boolean.class, false);
+  }
 
   public ApiResult getSysPerm() {
     List<SysPerm> perms = sysPermMapper.getAll();
@@ -103,7 +111,10 @@ public class PermManager {
   public ApiResult grantOwner(User user, String accountName, String entity) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
-    if (account == null) return ApiResult.notFound("account not found");
+    if (account == null) {
+      if (addNotFoundAccount) account = addAccountAnyWay(accountName);
+      else return ApiResult.notFound("account not found");
+    }
 
     return grantOwner(user, account.getId(), entity);
   }
@@ -280,11 +291,26 @@ public class PermManager {
     return uperms;
   }
 
+  private Account addAccountAnyWay(String accountName) {
+    Account account = new Account();
+
+    if (isEmail(accountName)) account.setEmail(accountName);
+    else account.setPhone(accountName);
+
+    account.setName("anonymous");
+    account.setPassword("0");
+    accountMapper.add(account);  // ignore race condition
+    return account;
+  }
+
   @Transactional
   public ApiResult grantPerm(User user, String accountName, int incId, List<String> perms) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
-    if (account == null) return ApiResult.notFound("account not found");
+    if (account == null) {
+      if (addNotFoundAccount) account = addAccountAnyWay(accountName);
+      else return ApiResult.notFound("account not found");
+    }
 
     return grantPerm(user, account.getId(), incId, perms);
   }
@@ -326,7 +352,11 @@ public class PermManager {
                              List<String> operms, List<String> nperms) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
-    if (account == null) return ApiResult.notFound("account not found");
+    if (account == null) {
+      if (addNotFoundAccount) account = addAccountAnyWay(accountName);
+      else return ApiResult.notFound("account not found");
+    }
+
     return alterPerm(user, account.getId(), incId, operms, nperms);
   }
 
@@ -341,7 +371,10 @@ public class PermManager {
   public ApiResult revokePerm(User user, String accountName, int incId, List<String> perms) {
     Account account = isEmail(accountName) ? accountMapper.findByEmail(accountName) :
       accountMapper.findByPhone(accountName);
-    if (account == null) return ApiResult.notFound("account not found");
+    if (account == null) {
+      if (addNotFoundAccount) account = addAccountAnyWay(accountName);
+      else return ApiResult.notFound("account not found");
+    }
 
     return revokePerm(user, account.getId(), incId, perms);
   }
