@@ -146,15 +146,42 @@ public class LoginController {
   )
   public ApiResult updateAccount(
     @AuthenticationPrincipal RedisRememberMeService.User user,
-    @ApiBodyObject Account account) {
-    if (account.getName() != null) {
-      if (account.getName().length() > 16) {
-        return ApiResult.badRequest("length(name) <= 16");
-      }
+    @ApiQueryParam(name = "phone", description = "phone", required = false)
+    @RequestParam Optional<String> phone,
+    @ApiQueryParam(name = "smsCode", description = "sms code", required = false)
+    @RequestParam Optional<String> smsCode,
+    @ApiQueryParam(name = "oldPhone", description = "old phone", required = false)
+    @RequestParam Optional<String> oldPhone,
+    @ApiQueryParam(name = "oldSmsCode", description = "old phone sms code", required = false)
+    @RequestParam Optional<String> oldSmsCode,
+    @ApiQueryParam(name = "email", description = "email", required = false)
+    @RequestParam Optional<String> email,
+    @ApiQueryParam(name = "name", description = "name", required = false)
+    @RequestParam Optional<String> name,
+    @ApiQueryParam(name = "headImg", description = "headImg", required = false)
+    @RequestParam Optional<String> headImg) {
+
+    if (name.isPresent() && name.get().length() > 16) {
+      return ApiResult.badRequest("length(name) <= 16");
     }
 
+    if (phone.isPresent() && !smsCode.isPresent()) {
+      return ApiResult.badRequest("modify phone need new phone's sms code");
+    }
+
+    if (oldPhone.isPresent() && !oldSmsCode.isPresent()) {
+      return ApiResult.badRequest("modify phone need old phone's sms code");
+    }
+
+    Account account = new Account();
     account.setId(user.getUid());
-    return loginManager.updateAccount(user, account);
+    account.setName(name.orElse(null));
+    account.setHeadImg(headImg.orElse(null));
+    account.setPhone(phone.orElse(null));
+    account.setOldPhone(oldPhone.orElse(null));
+    account.setEmail(email.orElse(null));
+
+    return loginManager.updateAccount(user, account, smsCode.orElse(null), oldSmsCode.orElse(null));
   }
 
   @ApiMethod(description = "destroy account")

@@ -204,7 +204,19 @@ public class LoginManager {
     }
   }
 
-  public ApiResult updateAccount(RedisRememberMeService.User user, Account account) {
+  public ApiResult updateAccount(
+    RedisRememberMeService.User user, Account account, String smsCode, String oldSmsCode) {
+
+    if (account.getPhone() != null &&
+        !smsCode.equals(smsService.get(account.getPhone(), smsCode))) {
+      return new ApiResult(Errno.SMS_CODE_ERROR);
+    }
+
+    if (account.getOldPhone() != null &&
+        !oldSmsCode.equals(smsService.get(account.getOldPhone(), oldSmsCode))) {
+      return new ApiResult(Errno.SMS_CODE_ERROR);
+    }
+
     account.setStatus(null);
     account.setPerm(Long.MAX_VALUE);
     accountMapper.update(account);

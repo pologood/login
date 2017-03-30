@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import static commons.spring.RedisRememberMeService.UserPerm;
 
 @ApiObject(name = "Account", description = "Account info")
-@JsonIgnoreProperties("password")
+@JsonIgnoreProperties({"password", "oldPhone"})
 public class Account {
   public static final long PLAT_BOSS  = 0;
   public static final long PLAT_ROBOT = 1;
@@ -74,6 +74,8 @@ public class Account {
 
   @ApiObjectField(name = "createTime", description = "create time")
   LocalDateTime createTime;
+
+  String oldPhone;  // internal usage
 
   public void setId(long id) {
     this.id = id;
@@ -143,6 +145,13 @@ public class Account {
   }
   public LocalDateTime getCreateTime() {
     return this.createTime;
+  }
+
+  public void setOldPhone(String phone) {
+    this.oldPhone = phone;
+  }
+  public String getOldPhone() {
+    return this.oldPhone;
   }
 
   public static boolean permGt(long a, long b) {

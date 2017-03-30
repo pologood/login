@@ -54,6 +54,9 @@ public interface AccountMapper {
 
     public static String update(Account account) {
       SQL sql = new SQL().UPDATE(TABLE);
+      if (account.getPhone() != null) {
+        sql.SET("phone = #{phone}");
+      }
       if (account.getName() != null) {
         sql.SET("name = #{name}");
       }
@@ -63,7 +66,13 @@ public interface AccountMapper {
       if (account.getStatus() != null) {
         sql.SET("status = #{status}");
       }
-      return sql.WHERE("id = #{id}").toString();
+
+      sql.WHERE("id = #{id}");
+      if (account.getPhone() != null) {
+        sql.AND().WHERE(account.getOldPhone() != null ? "phone = #{oldPhone}" : "phone IS NULL");
+      }
+
+      return sql.toString();
     }
 
     public static String delete(Account account) {
