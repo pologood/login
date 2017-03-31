@@ -224,6 +224,8 @@ public class PermManager {
   public ApiResult getAccountByEntity(User user, String entity) {
     boolean hasPerm = false;
     List<AccountPerm> perms = accountPermMapper.getEntityUser(entity);
+    if (perms.isEmpty()) return ApiResult.notFound();
+
     List<Account> accounts = new ArrayList<>();
     for (AccountPerm perm : perms) {
       if (user.isPlatformAdmin() || user.getUid() == perm.getUid()) hasPerm = true;
